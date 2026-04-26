@@ -1,0 +1,21 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Python (if any local scripts)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Working artifacts (any stray dev files)
+_*.json
+_*.tsv
+Screenshot*.png
+*.original.html
+ACC_with_mask.html
