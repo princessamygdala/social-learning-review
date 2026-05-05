@@ -1,0 +1,244 @@
+{
+  "version": "v2",
+  "last_updated": "2026-04-30",
+  "intro": "A small, hand-picked starter list of foundational and recent papers on computational models of social learning. This is not meant as a comprehensive bibliography — see the Papers tab for the full corpus. Edit this JSON to add, remove, or reorder entries; the website re-bundles when you run scripts/bundle_readings.py.",
+
+  "across_readings": {
+    "blurb": "Cross-cutting threads — the questions and debates that recur when you read these papers together.",
+    "themes": [
+      "Domain-general associative machinery vs domain-specific 'social' processes — the same mechanism debate runs through Schultz/Behrens/Burke/Heyes/Lockwood-Apps-Chang.",
+      "Self vs other learning rate asymmetries — Lockwood 2016 introduced it as a phenomenon; Charpentier 2018 puts it in a methodological frame; FeldmanHall & Nassar 2021 reframe it as a special case of dependency.",
+      "Marr's three levels as the implicit organising principle — almost every reading uses some version of computation/algorithm/implementation, even when not naming Marr.",
+      "Computational psychiatry's translational hopes — present in Charpentier 2018, Lockwood & Klein-Flügge 2021, and explicit in the Nature Mental Health 2025 systematic review."
+    ],
+    "big_questions": [
+      "Are computational models of social learning too simple (FeldmanHall & Nassar 2021) or sometimes too elaborate given social expertise (the Hackel et al. 2024 line, not in this list yet)?",
+      "Where does the 'social' in social learning live — at the implementation level, the algorithmic level, or only at the goal/computational level (Lockwood-Apps-Chang 2020)?",
+      "Are observational and active learning supported by the same prediction-error machinery, or by parallel streams (Burke 2010 vs Behrens 2008)?",
+      "Why are real-world social-learning paradigms — interactive, with hidden states, with bidirectional dependencies — so under-modelled, and what would an ecologically valid alternative look like?"
+    ],
+    "live_debates": [
+      "Is there a 'social' brain, or is everything we observe in 'social' tasks recruitment of the value/learning circuit with social inputs? (Heyes 2012 vs Lockwood-Apps-Chang 2020.)",
+      "Should the field invest in more elaborate models that capture social complexity (FeldmanHall & Nassar 2021) or accept that social cognition uses domain-general associative machinery and focus on cleaner tests of it (the Heyes line)?",
+      "How do we resolve the open-science gap — only 21% of computational social-learning psychopathology studies share code, 19% share data, 4% are preregistered (Nature Mental Health 2025)? Is this a culture problem or a methods-pipeline problem?"
+    ]
+  },
+
+  "groups": [
+    {
+      "name": "Foundations",
+      "blurb": "The conceptual roots: dopamine-as-prediction-error, the first fMRI evidence for social-value signals, observational learning of choice, and the question of whether 'social' learning needs anything beyond domain-general associative machinery.",
+      "entries": [
+        {
+          "id": "schultz1998",
+          "title": "Predictive Reward Signal of Dopamine Neurons",
+          "authors": "Schultz, W.",
+          "year": 1998,
+          "venue": "Journal of Neurophysiology, 80(1), 1–27",
+          "doi": "10.1152/jn.1998.80.1.1",
+          "local_pdf": "selected_keypubs/schultz-1998-predictive-reward-signal-of-dopamine-neurons.pdf",
+          "why": "The canonical statement of dopamine as a reward-prediction-error signal. Every RL-of-social-learning paper inherits this framing.",
+          "takeaways": [
+            "Phasic dopamine activity tracks the difference between expected and obtained reward, not reward per se.",
+            "Establishes the equivalence between TD-learning prediction errors and a measurable neural signal — the foundation that makes computational fMRI of social learning possible at all.",
+            "Read as the upstream commitment any RL paper makes implicitly: 'a learning signal lives in the brain.'"
+          ]
+        },
+        {
+          "id": "behrens2008",
+          "title": "Associative Learning of Social Value",
+          "authors": "Behrens, T. E. J., Hunt, L. T., Woolrich, M. W., & Rushworth, M. F. S.",
+          "year": 2008,
+          "venue": "Nature, 456, 245–249",
+          "doi": "10.1038/nature07538",
+          "local_pdf": "selected_keypubs/nature07538.pdf",
+          "why": "Showed that social-value (advisor fidelity) and reward-value learning use the same associative machinery in parallel ACC streams. Foundational for the 'social uses domain-general RL' line.",
+          "takeaways": [
+            "Two prediction errors run in parallel: a reward-value PE (about the option) and a confederate-fidelity PE (about the advisor).",
+            "Each PE has its own learning rate that adapts to its own volatility.",
+            "Two adjacent ACC subdivisions implement the two PE streams — same operation, different content."
+          ]
+        },
+        {
+          "id": "burke2010",
+          "title": "Neural Mechanisms of Observational Learning",
+          "authors": "Burke, C. J., Tobler, P. N., Baddeley, M., & Schultz, W.",
+          "year": 2010,
+          "venue": "PNAS, 107(32), 14431–14436",
+          "doi": "10.1073/pnas.1003111107",
+          "local_pdf": "selected_keypubs/burke-et-al-2010-neural-mechanisms-of-observational-learning.pdf",
+          "why": "Introduced observational action and outcome prediction errors and dissociated them in dlPFC vs vmPFC. Defines the observational-RL paradigm template.",
+          "takeaways": [
+            "Defines two new PE types: observational action PE (actual minus predicted choice of others) and observational outcome PE (actual minus predicted outcome received by others).",
+            "dlPFC tracks observational action PE; vmPFC tracks observational outcome PE — clean dissociation.",
+            "Argues observational learning is not just 'imitation' but uses computationally distinct PE streams."
+          ]
+        },
+        {
+          "id": "heyes2012",
+          "title": "What's Social About Social Learning?",
+          "authors": "Heyes, C.",
+          "year": 2012,
+          "venue": "Journal of Comparative Psychology, 126(2), 193–202",
+          "doi": "10.1037/a0025180",
+          "local_pdf": "selected_keypubs/What_s_social_about_social_learning.pdf",
+          "why": "Argues that 'social' learning is largely accomplished by domain-general associative mechanisms. The opposing pole to the 'special social brain' position; both are needed to read the field.",
+          "takeaways": [
+            "Most phenomena labelled 'social learning' can be explained by domain-general associative learning operating on social stimuli — they don't require dedicated social mechanisms.",
+            "What makes learning 'social' is at the input (the stimulus is another agent's behaviour), not at the operation.",
+            "Read against Lockwood-Apps-Chang 2020 to see the structure of the debate."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Framework debates",
+      "blurb": "The recent (and ongoing) arguments about whether computational models of social learning are too simple, too elaborate, or doing the wrong thing entirely. Reading these together, rather than separately, is the point.",
+      "entries": [
+        {
+          "id": "lockwoodAppsChang2020",
+          "title": "Is There a 'Social' Brain? Implementations and Algorithms",
+          "authors": "Lockwood, P. L., Apps, M. A. J., & Chang, S. W. C.",
+          "year": 2020,
+          "venue": "Trends in Cognitive Sciences, 24(10), 802–813",
+          "doi": "10.1016/j.tics.2020.07.003",
+          "local_pdf": "selected_keypubs/PIIS1364661320301686.pdf",
+          "why": "Applies Marr's three levels to the 'social brain' debate: a process can be socially specialised at the implementation level, the algorithmic level, or both — and the question changes when the goal changes. The framing this review builds on.",
+          "takeaways": [
+            "Distinguishes social specificity at the implementation level (regions selective for social stimuli) from the algorithmic level (computations specific to social problems).",
+            "Argues that whether something is 'social' depends on the goal of the agent — changing the goal can change the answer.",
+            "Recommends explicit cross-species (human/monkey/rodent) comparisons to dissociate the levels."
+          ]
+        },
+        {
+          "id": "feldmanhallNassar2021",
+          "title": "The Computational Challenge of Social Learning",
+          "authors": "FeldmanHall, O., & Nassar, M. R.",
+          "year": 2021,
+          "venue": "Trends in Cognitive Sciences, 25(12), 1045–1057",
+          "doi": "10.1016/j.tics.2021.09.002",
+          "local_pdf": "selected_keypubs/1-s2.0-S1364661321002291-main.pdf",
+          "why": "Standard models, the authors argue, fail to capture real social learning because they elide dynamic social rewards, unobservable internal states, large state-action spaces, and bidirectional dependencies. The 'too simple' pole.",
+          "takeaways": [
+            "Identifies four challenges: dynamic social rewards, unobservable internal states, very large state-action spaces, and bidirectional social dependencies (one person's actions change the other's internal state).",
+            "Argues these features are why standard RL models underperform on real social tasks — and why social tasks should be a *testbed* for next-generation models, not an awkward edge case.",
+            "A constructive framing of the 'simple-model' problem: integrate prior social knowledge into the model rather than try to learn everything from scratch."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Methods primers",
+      "blurb": "Practical entry points for someone new to the field. Useful both as teaching resources and as a benchmark for what minimum reporting should look like.",
+      "entries": [
+        {
+          "id": "charpentierOdoherty2018",
+          "title": "The Application of Computational Models to Social Neuroscience: Promises and Pitfalls",
+          "authors": "Charpentier, C. J., & O'Doherty, J. P.",
+          "year": 2018,
+          "venue": "Social Neuroscience, 13(6), 637–647",
+          "doi": "10.1080/17470919.2018.1518834",
+          "local_pdf": "selected_keypubs/nihms-1514850.pdf",
+          "why": "An honest overview of what computational modelling buys you in social neuroscience and what it does not. Read alongside Wilson & Collins (2019).",
+          "takeaways": [
+            "Lists the methodological pitfalls explicitly: over-fit models, weak parameter recovery, invalid neural inferences from poor model fits.",
+            "Argues computational modelling should be a tool for hypothesis testing, not a credentialing exercise.",
+            "Read as a companion to Wilson & Collins (2019) ten-rule checklist — together they define minimum reporting standards."
+          ]
+        },
+        {
+          "id": "lockwoodKleinFlugge2021",
+          "title": "Computational Modelling of Social Cognition and Behaviour — a Reinforcement Learning Primer",
+          "authors": "Lockwood, P. L., & Klein-Flügge, M. C.",
+          "year": 2021,
+          "venue": "Social Cognitive and Affective Neuroscience, 16(8), 761–771",
+          "doi": "10.1093/scan/nsaa040",
+          "local_pdf": "selected_keypubs/nsaa040.pdf",
+          "why": "A teaching-oriented primer on RL applied to social-learning paradigms. The cleanest starting point for a student or a clinician new to the modelling vocabulary.",
+          "takeaways": [
+            "Walks through learning rate, value, prediction error, softmax, and inverse-temperature in social paradigms.",
+            "Includes worked-example tasks (advice-taking, prosocial RL) and what each parameter buys you when fitted.",
+            "Lowest-cost entry point for clinicians and students into the social-RL methods stack."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Empirical exemplars",
+      "blurb": "Single empirical papers that frequently come up as canonical demonstrations of how the modelling-plus-imaging machinery works on a specifically social problem.",
+      "entries": [
+        {
+          "id": "lockwood2016prosocial",
+          "title": "Neurocomputational Mechanisms of Prosocial Learning and Links to Empathy",
+          "authors": "Lockwood, P. L., Apps, M. A. J., Valton, V., Viding, E., & Roiser, J. P.",
+          "year": 2016,
+          "venue": "PNAS, 113(35), 9763–9768",
+          "doi": "10.1073/pnas.1603198113",
+          "local_pdf": "selected_keypubs/lockwood-et-al-2016-neurocomputational-mechanisms-of-prosocial-learning-and-links-to-empathy.pdf",
+          "why": "Self vs other learning rate dissociation: people learn slower for others' rewards than their own; sgACC tracks the other-PE; trait empathy modulates the asymmetry. Cited as exemplar across the prosocial-RL literature.",
+          "takeaways": [
+            "People consistently show lower learning rates for outcomes that affect others than for outcomes that affect themselves.",
+            "sgACC selectively tracks prosocial PEs (when learning for the other person), distinct from the regions tracking self-PEs.",
+            "Trait empathy modulates the magnitude of the asymmetry — a behavioural-neural-individual-difference triple."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Recent reviews & syntheses",
+      "blurb": "Two synthetic reads — a focused 2017 review of the social-learning-PE literature and a 2025 systematic review of computational modelling in interpersonal psychopathology that reports field-wide reproducibility statistics.",
+      "entries": [
+        {
+          "id": "joiner2017",
+          "title": "Social Learning Through Prediction Error in the Brain",
+          "authors": "Joiner, J., Piva, M., Turrin, C., & Chang, S. W. C.",
+          "year": 2017,
+          "venue": "npj Science of Learning, 2, 8",
+          "doi": "10.1038/s41539-017-0009-2",
+          "local_pdf": "selected_keypubs/s41539-017-0009-2.pdf",
+          "why": "A clean review of self-referenced and other-referenced reward prediction errors and their neural correlates. Compact entry point to the prediction-error-in-social-learning literature.",
+          "takeaways": [
+            "Self-PE and other-PE are computationally similar but track in partially distinct neural circuits.",
+            "Reviews the evidence that the same algorithmic machinery generalises across self and other with population-specific weighting.",
+            "Argues prediction-error-based learning is conserved across social and non-social domains — a Heyes-aligned synthesis with the neural evidence."
+          ]
+        },
+        {
+          "id": "interpersonalCompPsych2025",
+          "title": "A Systematic Review of Computational Modeling of Interpersonal Dynamics in Psychopathology",
+          "authors": "[Authors TBD; verify]",
+          "year": 2025,
+          "venue": "Nature Mental Health",
+          "doi": "10.1038/s44220-025-00465-9",
+          "local_pdf": "selected_keypubs/s44220-025-00465-9 (1).pdf",
+          "why": "PRISMA review of 58 studies. Reports field-wide transparency statistics (21% open code, 19% open data, 4% preregistered) and the dominance of third-person over interactive paradigms — directly citable for §6.",
+          "takeaways": [
+            "Across 58 studies in computational psychopathology of interpersonal dynamics: 21% share open code, 19% open data, 4% preregistered.",
+            "Only 2 of 58 studies integrate computational modelling with more than one other method (e.g. neural recording or pharmacology).",
+            "Third-person observational tasks dominate over interactive paradigms in which the participant's behaviour shapes the partner's — a structural ecological-validity gap."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Working papers / in progress",
+      "blurb": "Internal or unpublished documents kept here for context.",
+      "entries": [
+        {
+          "id": "internal_litReview2026",
+          "title": "Computational Approaches to Social Learning and Social Neuroscience: A Comprehensive Literature Review",
+          "authors": "[Internal draft]",
+          "year": 2026,
+          "venue": "Working draft",
+          "doi": "",
+          "local_pdf": "selected_keypubs/literature_review.pdf",
+          "why": "Working draft synthesising ~200 papers across computational social neuroscience, RL, ToM, and computational psychiatry. Internal scaffolding document; not yet public.",
+          "takeaways": [
+            "Internal scaffolding for the review's framing — Marr levels, source/target/context, plus topic and brain-region maps.",
+            "Approximately 200 papers reviewed; not yet a public artefact."
+          ]
+        }
+      ]
+    }
+  ]
+}
