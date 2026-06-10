@@ -363,145 +363,40 @@ function decodeHemisphere(surfaceInfo, surface, hemisphere){
       <option value="custom">view: -</option>
     </select>
     <input id="opacity-range" type="range" min="0" max="100" value="30" />
-  <script>
-(function () {
-  var lastTooltipText = null;
-
-  function showBanner(msg, ok) {
-    var b = document.getElementById('brain-click-banner');
-    if (!b) {
-      b = document.createElement('div');
-      b.id = 'brain-click-banner';
-      b.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:6px 10px;font:12px monospace;z-index:99999;text-align:center;';
-      document.body.appendChild(b);
-    }
-    b.style.background = ok ? '#dbecd9' : '#ffd7d2';
-    b.style.color = ok ? '#1d4f23' : '#8a1f15';
-    b.textContent = msg;
-    clearTimeout(b._t);
-    b._t = setTimeout(function () { if (b) b.style.opacity = '0'; }, 2500);
-    b.style.opacity = '1';
+  <script id="brain-click-v4">
+/* BRAIN_CLICK_V4 — deterministic pointNumber -> citation routing */
+(function(){
+  var ML = ["Hertz et al. (2017) • R Angular Gyrus • rescorla_wagner", "Hertz et al. (2017) • L Frontal Pole • rescorla_wagner", "Hertz et al. (2017) • Left Accumbens • rescorla_wagner", "Hertz et al. (2017) • Right Accumbens • rescorla_wagner", "Hertz et al. (2017) • Right Putamen • rescorla_wagner"];
+  function extractCit(label){
+    if(!label) return "";
+    if(/^\s*\d+\s+peaks?/i.test(label)) return "";
+    var sep = label.indexOf(" \u2022 "); if(sep<0) sep = label.indexOf(" • ");
+    var s = sep>=0 ? label.slice(0,sep) : label;
+    var m = s.match(/^.*\(\d{4}[a-z]?\)/);
+    return (m ? m[0] : s).trim();
   }
-
-  // Robust citation extraction. The hover tooltip can contain MNI coordinates,
-  // axis labels, or our intended marker_label. We pick out only the substring
-  // that LOOKS like a citation: surname-ish words followed by (YYYY).
-  function extractCit(label) {
-    if (!label) return '';
-    // Skip cluster labels like "61 peaks · 38 studies · …"
-    if (/^\s*\d+\s+peaks?/i.test(label)) return '';
-    // Citation pattern: starts with capitalised author surname(s), ends with (YYYY).
-    // Allow et al., &, and accented characters in surnames.
-    var re = /([A-Z][A-Za-zÀ-ÿ'\-]+(?:\s+(?:&|et\s+al\.?))?(?:\s+[A-Z][A-Za-zÀ-ÿ'\-]+)?(?:\s+(?:&|et\s+al\.?))?)\s*\((\d{4})\)/;
-    var m = label.match(re);
-    if (m) return (m[1] + ' (' + m[2] + ')').trim();
-    // Fallback: substring before the first bullet, but only if it doesn't look
-    // like a coordinate triple (numbers-with-commas) or other junk.
-    var sep = label.indexOf(' \u2022 ');
-    if (sep < 0) sep = label.indexOf(' • ');
-    if (sep < 0) return '';
-    var cit = label.substring(0, sep).trim();
-    // Reject things that are obviously not citations: pure-numeric, coord-like.
-    if (!cit) return '';
-    if (/^[-−\d\.,\s]+$/.test(cit)) return '';            // coords only
-    if (!/[A-Za-z]/.test(cit)) return '';                       // no letters
-    return cit;
+  function route(cit){
+    if(!cit) return;
+    try{ if(window.parent && window.parent.brainStudyClicked){ window.parent.brainStudyClicked(cit); } }catch(e){}
+    try{ window.parent.postMessage({type:"brainStudyClick", citation:cit}, "*"); }catch(e){}
   }
-
-  function routeToParent(cit) {
-    if (!cit) { showBanner('no citation in label', false); return false; }
-    showBanner('routing → ' + cit, true);
-    var ok = false;
-    try {
-      // Direct call works if same origin (sibling files in one folder = same origin).
-      if (window.parent && window.parent.brainStudyClicked) {
-        window.parent.brainStudyClicked(cit);
-        ok = true;
-      }
-    } catch (err) { console.warn('[brain] direct call failed:', err.message); }
-    try {
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({type: 'brainStudyClick', citation: cit}, '*');
-        ok = true;
-      }
-    } catch (err) { console.warn('[brain] postMessage failed:', err.message); }
-    if (!ok) showBanner('could not reach parent window', false);
-    return ok;
-  }
-
-  // Plotly creates its hover label as a small group of SVG/HTML elements.
-  // We don't trust any single selector — instead, we walk a broad set of
-  // candidate hover containers and pick the one that ACTUALLY contains a
-  // citation pattern. That way coordinate-only text never gets returned.
-  var CIT_PROBE = /[A-Z][A-Za-zÀ-ÿ'\-]+(?:\s+(?:&|et\s+al\.?))?(?:\s+[A-Z][A-Za-zÀ-ÿ'\-]+)?\s*\(\d{4}\)/;
-  function readVisibleHoverText() {
-    var SELECTORS = [
-      '.hovertext', '.hoverlabel', '.nsewdrag + g',
-      'g.hoverlayer', 'g.hoverlayer text',
-      '.main-svg .hovertext', 'g.hovertext',
-    ];
-    for (var s = 0; s < SELECTORS.length; s++) {
-      var nodes = document.querySelectorAll(SELECTORS[s]);
-      for (var i = nodes.length - 1; i >= 0; i--) {
-        var t = (nodes[i].textContent || '').trim();
-        if (t && CIT_PROBE.test(t)) return t;
-      }
-    }
-    // Last-resort fallback: scan all visible text on the page for a citation.
-    var bodyTxt = (document.body.innerText || document.body.textContent || '');
-    var m = bodyTxt.match(CIT_PROBE);
-    return m ? m[0] : null;
-  }
-
-  function tryAttach() {
-    var plot = document.getElementById('connectome-plot');
-    if (!plot) { setTimeout(tryAttach, 200); return; }
-    plot.style.cursor = 'pointer';
-    showBanner('brain v3 ready · hover then click any peak', true);
-
-    if (plot.on) {
-      plot.on('plotly_click', function (data) {
-        if (data && data.points && data.points.length) {
-          routeToParent(extractCit(data.points[0].text || ''));
-        }
-      });
-      plot.on('plotly_hover', function (data) {
-        if (data && data.points && data.points.length) {
-          lastTooltipText = data.points[0].text || '';
-        }
-      });
-    }
-
-    // Universal click handler: fires on ANY click inside the iframe.
-    // Uses last hover text from Plotly OR DOM scrape OR finds the most
-    // recent point Plotly internally registered.
-    document.addEventListener('click', function (ev) {
-      var src = lastTooltipText || readVisibleHoverText() || '';
-      // Last-resort: walk the plot's internal hover state if Plotly has any
-      if (!src && plot && plot._hoverdata && plot._hoverdata.length) {
-        src = plot._hoverdata[0].text || '';
-      }
-      if (!src && plot && plot._lastHoverTime && (Date.now() - plot._lastHoverTime) < 800) {
-        // Very recent hover — try DOM scrape one more time
-        src = readVisibleHoverText() || '';
-      }
-      if (src) {
-        var cit = extractCit(src);
-        if (cit) routeToParent(cit);
-        else showBanner('that marker has no citation (cluster summary)', false);
-      } else {
-        showBanner('hover any peak first, then click — or click directly on a colored dot', false);
-      }
-    }, true);
-
-    // Track the last hover time so we can be lenient on near-misses
-    plot.addEventListener('mousemove', function () {
-      plot._lastHoverTime = Date.now();
+  function attach(){
+    var plot = document.getElementById("connectome-plot");
+    if(!plot || !plot.on){ setTimeout(attach,200); return; }
+    plot.style.cursor = "pointer";
+    plot.on("plotly_click", function(d){
+      if(!d || !d.points || !d.points.length) return;
+      var p = d.points[0];
+      // Only act on the markers trace (it has exactly ML.length points);
+      // ignore clicks that land on the brain mesh.
+      var isMarkers = p.data && p.data.x && p.data.x.length === ML.length;
+      if(!isMarkers) return;
+      var lbl = (typeof p.text==="string" && p.text) ? p.text
+              : (p.pointNumber!=null && ML[p.pointNumber]!=null) ? ML[p.pointNumber] : "";
+      route(extractCit(lbl));
     });
   }
-
-  if (document.readyState === 'complete') tryAttach();
-  else window.addEventListener('load', tryAttach);
+  if(document.readyState==="complete") attach(); else window.addEventListener("load", attach);
 })();
 </script>
 </body>

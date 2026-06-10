@@ -363,145 +363,40 @@ function decodeHemisphere(surfaceInfo, surface, hemisphere){
       <option value="custom">view: -</option>
     </select>
     <input id="opacity-range" type="range" min="0" max="100" value="30" />
-  <script>
-(function () {
-  var lastTooltipText = null;
-
-  function showBanner(msg, ok) {
-    var b = document.getElementById('brain-click-banner');
-    if (!b) {
-      b = document.createElement('div');
-      b.id = 'brain-click-banner';
-      b.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:6px 10px;font:12px monospace;z-index:99999;text-align:center;';
-      document.body.appendChild(b);
-    }
-    b.style.background = ok ? '#dbecd9' : '#ffd7d2';
-    b.style.color = ok ? '#1d4f23' : '#8a1f15';
-    b.textContent = msg;
-    clearTimeout(b._t);
-    b._t = setTimeout(function () { if (b) b.style.opacity = '0'; }, 2500);
-    b.style.opacity = '1';
+  <script id="brain-click-v4">
+/* BRAIN_CLICK_V4 — deterministic pointNumber -> citation routing */
+(function(){
+  var ML = ["Shaw et al. (2018) • R Frontal Pole • utility_EV", "Shaw et al. (2018) • R Precentral Gyrus • utility_EV", "Shaw et al. (2018) • L Middle Frontal Gyrus • utility_EV", "Shaw et al. (2018) • R Middle Frontal Gyrus • utility_EV", "Shaw et al. (2018) • Putamen R • utility_EV", "Shaw et al. (2018) • Left Thalamus • utility_EV", "Shaw et al. (2018) • Right Thalamus • utility_EV", "Shaw et al. (2018) • L Insular Cortex • utility_EV", "Shaw et al. (2018) • R Central Opercular Cortex • utility_EV", "Shaw et al. (2018) • L Postcentral Gyrus • utility_EV", "Shaw et al. (2018) • R Lateral Occipital Cortex, superior division • utility_EV", "Shaw et al. (2018) • L Supramarginal Gyrus, anterior division • utility_EV", "Shaw et al. (2018) • R Inferior Temporal Gyrus, posterior division • utility_EV", "Shaw et al. (2018) • R Temporal Pole • utility_EV", "Shaw et al. (2018) • L Lateral Occipital Cortex, inferior division • utility_EV", "Shaw et al. (2018) • R Occipital Fusiform Gyrus • utility_EV", "Shaw et al. (2018) • L cerebellum • utility_EV", "Shaw et al. (2018) • R cerebellum • utility_EV", "Shaw et al. (2018) • R Frontal Pole • utility_EV", "Shaw et al. (2018) • L Central Opercular Cortex • utility_EV", "Shaw et al. (2018) • L Paracingulate Gyrus • utility_EV", "Shaw et al. (2018) • L Lateral Occipital Cortex, superior division • utility_EV", "Shaw et al. (2018) • R Angular Gyrus • utility_EV", "Shaw et al. (2018) • L Middle Temporal Gyrus, anterior division • utility_EV", "Shaw et al. (2018) • L Superior Temporal Gyrus, posterior division • utility_EV", "Shaw et al. (2018) • R Superior Temporal Gyrus, anterior division • utility_EV", "Shaw et al. (2018) • L Precuneous Cortex • utility_EV", "Shaw et al. (2018) • L Paracingulate Gyrus • utility_EV", "Shaw et al. (2018) • L Cuneal Cortex • utility_EV", "Shaw et al. (2018) • R Lateral Occipital Cortex, superior division • utility_EV", "Shaw et al. (2018) • L Occipital Fusiform Gyrus • utility_EV", "Shaw et al. (2018) • R Occipital Fusiform Gyrus • utility_EV", "Shaw et al. (2018) • L Frontal Pole • utility_EV", "Shaw et al. (2018) • R Paracingulate Gyrus • utility_EV", "Shaw et al. (2018) • R Middle Frontal Gyrus • utility_EV", "Shaw et al. (2018) • L Insular Cortex • utility_EV", "Shaw et al. (2018) • R Frontal Orbital Cortex • utility_EV", "Shaw et al. (2018) • R Lateral Occipital Cortex, superior division • utility_EV", "Shaw et al. (2018) • R Lateral Occipital Cortex, superior division • utility_EV", "Shaw et al. (2018) • L Lateral Occipital Cortex, inferior division • utility_EV", "Shaw et al. (2018) • R Lateral Occipital Cortex, inferior division • utility_EV", "Shaw et al. (2018) • R Paracingulate Gyrus • utility_EV", "Shaw et al. (2018) • R Frontal Orbital Cortex • utility_EV", "Shaw et al. (2018) • R Middle Temporal Gyrus, posterior division • utility_EV", "Shaw et al. (2018) • L Lateral Occipital Cortex, inferior division • utility_EV", "Shaw et al. (2018) • R Lateral Occipital Cortex, inferior division • utility_EV", "Shaw et al. (2018) • L cerebellum • utility_EV", "King-Casas et al. (2005) • Brain-Stem • rescorla_wagner", "King-Casas et al. (2005) • Brain-Stem • rescorla_wagner", "King-Casas et al. (2005) • Right Thalamus • rescorla_wagner", "King-Casas et al. (2005) • thalamus (L) • rescorla_wagner", "King-Casas et al. (2005) • L Precentral Gyrus • rescorla_wagner", "King-Casas et al. (2005) • R Precentral Gyrus • rescorla_wagner", "King-Casas et al. (2005) • L Middle Frontal Gyrus • rescorla_wagner", "King-Casas et al. (2005) • caudate (R) • rescorla_wagner", "King-Casas et al. (2005) • caudate (L) • rescorla_wagner", "King-Casas et al. (2005) • Cingulate Gyrus, anterior division • rescorla_wagner", "King-Casas et al. (2005) • R Paracingulate Gyrus • rescorla_wagner", "Pisauro et al. (2022) • R Angular Gyrus • bayesian", "Pisauro et al. (2022) • R Inferior Frontal Gyrus, pars opercularis • bayesian", "Pisauro et al. (2022) • R Middle Temporal Gyrus, posterior division • bayesian", "Pisauro et al. (2022) • R Middle Temporal Gyrus, anterior division • bayesian", "Pisauro et al. (2022) • R Middle Frontal Gyrus • bayesian", "Pisauro et al. (2022) • R Lateral Occipital Cortex, superior division • bayesian", "Pisauro et al. (2022) • R Parietal Opercular Cortex • bayesian", "Pisauro et al. (2022) • R Supramarginal Gyrus, posterior division • bayesian", "Pisauro et al. (2022) • L Lingual Gyrus • bayesian", "Pisauro et al. (2022) • R Paracingulate Gyrus • bayesian", "Pisauro et al. (2022) • R Cingulate Gyrus, anterior division • bayesian", "Pisauro et al. (2022) • L Superior Frontal Gyrus • bayesian", "Pisauro et al. (2022) • L Precuneous Cortex • bayesian", "Pisauro et al. (2022) • R Insular Cortex • bayesian", "Pisauro et al. (2022) • R Middle Frontal Gyrus • bayesian", "Pisauro et al. (2022) • Left Putamen • bayesian", "Pisauro et al. (2022) • R Frontal Orbital Cortex • bayesian", "Pisauro et al. (2022) • L Frontal Pole • bayesian", "Pisauro et al. (2022) • L Cingulate Gyrus, anterior division • bayesian", "Pisauro et al. (2022) • L Cingulate Gyrus, anterior division • bayesian", "Pisauro et al. (2022) • L Middle Frontal Gyrus • bayesian", "Pisauro et al. (2022) • L Paracingulate Gyrus • bayesian", "Pisauro et al. (2022) • L Cingulate Gyrus, posterior division • bayesian", "Pisauro et al. (2022) • L Cingulate Gyrus, anterior division • bayesian", "Pisauro et al. (2022) • L Paracingulate Gyrus • bayesian", "Pisauro et al. (2022) • L Subcallosal Cortex • bayesian", "Pisauro et al. (2022) • L Cingulate Gyrus, anterior division • bayesian", "Pisauro et al. (2022) • R Precentral Gyrus • bayesian", "Pisauro et al. (2022) • R Lateral Occipital Cortex, superior division • bayesian", "Pisauro et al. (2022) • R Inferior Frontal Gyrus, pars opercularis • bayesian", "Hétu et al. (2017) • Brain-Stem • bayesian", "Hétu et al. (2017) • Right VTA (posPE) • bayesian", "Hétu et al. (2017) • Brain-Stem • bayesian", "Hétu et al. (2017) • Brain-Stem • bayesian", "Hétu et al. (2017) • L Paracingulate Gyrus • bayesian", "Hétu et al. (2017) • L Inferior Frontal Gyrus, pars opercularis • bayesian", "Hétu et al. (2017) • Paracingulate Gyrus • bayesian", "Hétu et al. (2017) • R Frontal Opercular Cortex • bayesian", "Hétu et al. (2017) • R Frontal Pole • bayesian", "Hétu et al. (2017) • R Insular Cortex • bayesian", "Hétu et al. (2017) • L Frontal Pole • bayesian", "Hétu et al. (2017) • Right cerebellum (culmen) • bayesian", "Hétu et al. (2017) • Cingulate Gyrus, anterior division • bayesian", "Hétu et al. (2017) • L Occipital Fusiform Gyrus • bayesian", "Hétu et al. (2017) • R Frontal Pole • bayesian", "Hétu et al. (2017) • L Insular Cortex • bayesian", "Hétu et al. (2017) • Brain-Stem • bayesian", "Hétu et al. (2017) • R Frontal Pole • bayesian", "Hétu et al. (2017) • R Inferior Temporal Gyrus, temporooccipital part • bayesian", "Hétu et al. (2017) • L Temporal Occipital Fusiform Cortex • bayesian", "Hétu et al. (2017) • Left Hippocampus • bayesian", "Hétu et al. (2017) • Brain-Stem • bayesian", "Hétu et al. (2017) • R Insular Cortex • bayesian", "Hétu et al. (2017) • R Insular Cortex • bayesian", "Hétu et al. (2017) • Brain-Stem • bayesian", "Ide et al. (2018) • Juxtapositional Lobule Cortex (formerly Supplementary Motor  • bayesian", "Ide et al. (2018) • R Cingulate Gyrus, anterior division • bayesian", "Ide et al. (2018) • Left Caudate • bayesian", "Ide et al. (2018) • L Frontal Orbital Cortex • bayesian", "Ide et al. (2018) • Left Amygdala • bayesian", "Ide et al. (2018) • Right amygdala (P(trust) PL>OT) • bayesian", "Ide et al. (2018) • L Frontal Pole • bayesian", "Ide et al. (2018) • R Paracingulate Gyrus • bayesian", "Ide et al. (2018) • R Cingulate Gyrus, anterior division • bayesian", "Ide et al. (2018) • R Middle Frontal Gyrus • bayesian", "Ide et al. (2018) • Left Amygdala • bayesian", "Ide et al. (2018) • R Parahippocampal Gyrus, anterior division • bayesian", "Ide et al. (2018) • Left Hippocampus • bayesian", "Ide et al. (2018) • Left Thalamus • bayesian", "Heijne et al. (2018) • L Paracingulate Gyrus • rescorla_wagner", "Heijne et al. (2018) • L Subcallosal Cortex • rescorla_wagner", "Heijne et al. (2018) • R Occipital Pole • rescorla_wagner", "Heijne et al. (2018) • Frontal Pole • rescorla_wagner", "Heijne et al. (2018) • Septo-hypothalamic region (social > nonsocial stay, SVC) • rescorla_wagner", "Heijne et al. (2018) • Lingual Gyrus • rescorla_wagner", "Heijne et al. (2018) • R Lateral Occipital Cortex, superior division • rescorla_wagner", "Heijne et al. (2018) • R Lateral Occipital Cortex, inferior division • rescorla_wagner", "Jin et al. (2025) • L Paracingulate Gyrus • rescorla_wagner", "Jin et al. (2025) • L Superior Frontal Gyrus • rescorla_wagner", "Jin et al. (2025) • R Subcallosal Cortex • rescorla_wagner", "Jin et al. (2025) • L Precentral Gyrus • rescorla_wagner", "Jin et al. (2025) • R Inferior Frontal Gyrus, pars triangularis • rescorla_wagner", "Jin et al. (2025) • L Precentral Gyrus • rescorla_wagner", "Jin et al. (2025) • R Frontal Orbital Cortex • rescorla_wagner", "Jin et al. (2025) • R Middle Temporal Gyrus, posterior division • rescorla_wagner", "Jin et al. (2025) • R Temporal Occipital Fusiform Cortex • rescorla_wagner", "Jin et al. (2025) • L Parahippocampal Gyrus, anterior division • rescorla_wagner", "Jin et al. (2025) • Right Hippocampus • rescorla_wagner", "Jin et al. (2025) • R Temporal Pole • rescorla_wagner", "Jin et al. (2025) • R Lateral Occipital Cortex, superior division • rescorla_wagner", "Jin et al. (2025) • L Occipital Pole • rescorla_wagner", "Jin et al. (2025) • L Lateral Occipital Cortex, superior division • rescorla_wagner", "Jin et al. (2025) • Right Caudate • rescorla_wagner", "Jin et al. (2025) • L cerebellum • rescorla_wagner", "Jin et al. (2025) • R cerebellum • rescorla_wagner", "Fareri et al. (2015) • R Lingual Gyrus • rescorla_wagner", "Fareri et al. (2015) • Right Caudate • rescorla_wagner", "Fareri et al. (2015) • Paracingulate Gyrus • rescorla_wagner", "Fareri et al. (2015) • Left Putamen • rescorla_wagner", "Fareri et al. (2015) • R Postcentral Gyrus • rescorla_wagner", "Fareri et al. (2015) • R Frontal Pole • rescorla_wagner", "Fareri et al. (2015) • R Occipital Pole • rescorla_wagner", "Fareri et al. (2015) • R Lateral Occipital Cortex, superior division • rescorla_wagner", "Fareri et al. (2015) • L Supracalcarine Cortex • rescorla_wagner", "Fareri et al. (2015) • Right Caudate • rescorla_wagner", "Fareri et al. (2015) • Cingulate Gyrus, posterior division • rescorla_wagner", "Fareri et al. (2015) • Ventral striatum • rescorla_wagner", "Fareri et al. (2015) • L Lateral Occipital Cortex, inferior division • rescorla_wagner", "Khalvati et al. (2016) • R Frontal Pole • bayesian", "Khalvati et al. (2016) • L Frontal Pole • bayesian", "Khalvati et al. (2016) • Left ventral striatum • bayesian", "Cisler et al. (2015) • L Parietal Opercular Cortex • rescorla_wagner", "Cisler et al. (2015) • R Inferior Frontal Gyrus, pars triangularis • rescorla_wagner", "Cisler et al. (2015) • Frontal Pole • rescorla_wagner", "Cisler et al. (2015) • L Supramarginal Gyrus, posterior division • rescorla_wagner", "Cisler et al. (2015) • R Angular Gyrus • rescorla_wagner", "Cisler et al. (2015) • L Cingulate Gyrus, anterior division • rescorla_wagner", "Cisler et al. (2015) • L Inferior Frontal Gyrus, pars opercularis • rescorla_wagner", "Ide et al. (2018) • Juxtapositional Lobule Cortex (formerly Supplementary Motor  • rescorla_wagner", "Ide et al. (2018) • R Cingulate Gyrus, anterior division • rescorla_wagner", "Ide et al. (2018) • Left Caudate • rescorla_wagner", "Ide et al. (2018) • L Frontal Orbital Cortex • rescorla_wagner", "Ide et al. (2018) • Left Amygdala • rescorla_wagner", "Ide et al. (2018) • R amygdala (P(trust) PL>OT) • rescorla_wagner", "Ide et al. (2018) • L Frontal Pole • rescorla_wagner", "Ide et al. (2018) • R Paracingulate Gyrus • rescorla_wagner", "Ide et al. (2018) • R Cingulate Gyrus, anterior division • rescorla_wagner", "Ide et al. (2018) • R Middle Frontal Gyrus • rescorla_wagner", "Ide et al. (2018) • Left Amygdala • rescorla_wagner", "Ide et al. (2018) • R Parahippocampal Gyrus, anterior division • rescorla_wagner", "Ide et al. (2018) • Left Hippocampus • rescorla_wagner", "Ide et al. (2018) • Left Thalamus • rescorla_wagner", "Pisauro et al. (2022) • R Angular Gyrus • bayesian", "Pisauro et al. (2022) • R Supramarginal Gyrus, posterior division • bayesian", "Pisauro et al. (2022) • L Superior Frontal Gyrus • bayesian", "Pisauro et al. (2022) • Cingulate Gyrus, anterior division • bayesian", "Pisauro et al. (2022) • R Paracingulate Gyrus • bayesian", "Pisauro et al. (2022) • R Middle Frontal Gyrus • bayesian", "Pisauro et al. (2022) • R Insular Cortex • bayesian", "Pisauro et al. (2022) • L Precuneous Cortex • bayesian", "Pisauro et al. (2022) • Left Putamen • bayesian", "Pisauro et al. (2022) • Right Putamen • bayesian", "Pisauro et al. (2022) • R Inferior Frontal Gyrus, pars opercularis • bayesian", "Pisauro et al. (2022) • R Middle Frontal Gyrus • bayesian", "Pisauro et al. (2022) • R Middle Temporal Gyrus, posterior division • bayesian", "Pisauro et al. (2022) • Cingulate Gyrus, anterior division • bayesian", "Pisauro et al. (2022) • L Paracingulate Gyrus • bayesian", "Pisauro et al. (2022) • L Cingulate Gyrus, anterior division • bayesian", "Pisauro et al. (2022) • L Cingulate Gyrus, posterior division • bayesian", "Pisauro et al. (2022) • L Subcallosal Cortex • bayesian", "Pisauro et al. (2022) • L Cingulate Gyrus, anterior division • bayesian", "Cui (2021) • Left Accumbens • utility_EV", "Cui (2021) • Right Accumbens • utility_EV", "Cui (2021) • Left Accumbens • utility_EV", "Cui (2021) • Right Accumbens • utility_EV", "Cui (2021) • L Frontal Pole • utility_EV", "Cui (2021) • Paracingulate Gyrus • utility_EV", "Cui (2021) • L Frontal Orbital Cortex • utility_EV", "Cui (2021) • R Frontal Orbital Cortex • utility_EV", "Bos et al. (2013) • L Frontal Medial Cortex • rescorla_wagner", "Bos et al. (2013) • Ventral striatum (caudate head) • rescorla_wagner", "Bos et al. (2013) • R Angular Gyrus • rescorla_wagner", "Bos et al. (2013) • R Precuneous Cortex • rescorla_wagner", "Bos et al. (2013) • L Insular Cortex • rescorla_wagner", "Bos et al. (2013) • R Frontal Orbital Cortex • rescorla_wagner", "Bos et al. (2013) • R Paracingulate Gyrus • rescorla_wagner", "Bos et al. (2013) • R Supramarginal Gyrus, anterior division • rescorla_wagner", "Vanyukov et al. (2019) • L Precuneous Cortex • q_learning", "Vanyukov et al. (2019) • L Insular Cortex • q_learning", "Vanyukov et al. (2019) • L cerebellum • q_learning", "Vanyukov et al. (2019) • R Inferior Frontal Gyrus, pars triangularis • q_learning", "Vanyukov et al. (2019) • L Middle Frontal Gyrus • q_learning", "Vanyukov et al. (2019) • R Middle Frontal Gyrus • q_learning", "Vanyukov et al. (2019) • L Cingulate Gyrus, anterior division • q_learning", "Vanyukov et al. (2019) • L Frontal Pole • q_learning", "Vanyukov et al. (2019) • R Temporal Occipital Fusiform Cortex • q_learning", "Vanyukov et al. (2019) • R Supramarginal Gyrus, anterior division • q_learning", "Cui et al. (2021) • Left Accumbens • utility_EV", "Cui et al. (2021) • Right Accumbens • utility_EV", "Cui et al. (2021) • Left Accumbens • utility_EV", "Cui et al. (2021) • Right Accumbens • utility_EV", "Cui et al. (2021) • L Frontal Pole • utility_EV", "Cui et al. (2021) • Paracingulate Gyrus • utility_EV", "Cui et al. (2021) • L Frontal Orbital Cortex • utility_EV", "Cui et al. (2021) • R Frontal Orbital Cortex • utility_EV", "Allen et al. (2023) • Left Putamen • q_learning", "Allen et al. (2023) • L Lateral Occipital Cortex, inferior division • q_learning", "Allen et al. (2023) • R Cingulate Gyrus, posterior division • q_learning", "Allen et al. (2023) • R Inferior Temporal Gyrus, temporooccipital part • q_learning", "Allen et al. (2023) • L Postcentral Gyrus • q_learning", "Allen et al. (2023) • R cerebellum • q_learning", "Allen et al. (2023) • L cerebellum • q_learning", "Allen et al. (2023) • Frontal Medial Cortex • q_learning", "Allen et al. (2023) • R Superior Frontal Gyrus • q_learning", "Allen et al. (2023) • R Superior Frontal Gyrus • q_learning", "Allen et al. (2023) • R Precuneous Cortex • q_learning", "Allen et al. (2023) • R Insular Cortex • q_learning", "Allen et al. (2023) • L Frontal Opercular Cortex • q_learning", "Allen et al. (2023) • R Postcentral Gyrus • q_learning", "Allen et al. (2023) • R Temporal Pole • q_learning", "Allen et al. (2023) • L Frontal Orbital Cortex • q_learning", "Allen et al. (2023) • L Lingual Gyrus • q_learning", "Hackel et al. (2020) • L Frontal Medial Cortex • rescorla_wagner", "Hackel et al. (2020) • Paracingulate Gyrus • rescorla_wagner", "Hackel et al. (2020) • R Frontal Pole • rescorla_wagner", "Hackel et al. (2020) • L Subcallosal Cortex • rescorla_wagner", "Hackel et al. (2020) • Subcallosal Cortex • rescorla_wagner", "Hackel et al. (2020) • R Frontal Pole • rescorla_wagner", "Hackel et al. (2020) • R Inferior Frontal Gyrus, pars opercularis • rescorla_wagner", "Hackel et al. (2020) • R Supramarginal Gyrus, posterior division • rescorla_wagner", "Jin et al. (2023) • Cingulate Gyrus, anterior division • rescorla_wagner", "Jin et al. (2023) • Striatum (L) • rescorla_wagner", "Jin et al. (2023) • L Precentral Gyrus • rescorla_wagner", "Jin et al. (2023) • R Occipital Pole • rescorla_wagner", "Jin et al. (2023) • Left Pallidum • rescorla_wagner", "Jin et al. (2023) • L Occipital Pole • rescorla_wagner", "Jin et al. (2023) • pgACC (R) • rescorla_wagner", "Jin et al. (2023) • L Cingulate Gyrus, anterior division • rescorla_wagner", "Jin et al. (2023) • Left Putamen • rescorla_wagner", "Jin et al. (2023) • Right Putamen • rescorla_wagner", "Jin et al. (2023) • R Parietal Opercular Cortex • rescorla_wagner", "Jin et al. (2023) • Left Putamen • rescorla_wagner", "Jin et al. (2023) • L Superior Parietal Lobule • rescorla_wagner", "Jin et al. (2023) • L Cingulate Gyrus, posterior division • rescorla_wagner", "Jin et al. (2023) • Paracingulate Gyrus • rescorla_wagner", "Jin et al. (2023) • L Heschl's Gyrus (includes H1 and H2) • rescorla_wagner", "Jin et al. (2023) • L Middle Frontal Gyrus • rescorla_wagner", "Jin et al. (2023) • Supracalcarine Cortex • rescorla_wagner", "Jin et al. (2023) • R Middle Temporal Gyrus, temporooccipital part • rescorla_wagner", "Jin et al. (2023) • L Superior Frontal Gyrus • rescorla_wagner", "Allen et al. (2023) • Left Putamen • rescorla_wagner", "Allen et al. (2023) • L Lateral Occipital Cortex, inferior division • rescorla_wagner", "Allen et al. (2023) • R Cingulate Gyrus, posterior division • rescorla_wagner", "Allen et al. (2023) • R Inferior Temporal Gyrus, temporooccipital part • rescorla_wagner", "Allen et al. (2023) • L Postcentral Gyrus • rescorla_wagner", "Allen et al. (2023) • R cerebellum • rescorla_wagner", "Allen et al. (2023) • L cerebellum • rescorla_wagner", "Allen et al. (2023) • Frontal Medial Cortex • rescorla_wagner", "Allen et al. (2023) • R Superior Frontal Gyrus • rescorla_wagner", "Allen et al. (2023) • R Superior Frontal Gyrus • rescorla_wagner", "Allen et al. (2023) • R Precuneous Cortex • rescorla_wagner", "Allen et al. (2023) • R Insular Cortex • rescorla_wagner", "Allen et al. (2023) • L Frontal Opercular Cortex • rescorla_wagner", "Allen et al. (2023) • R Postcentral Gyrus • rescorla_wagner", "Allen et al. (2023) • R Temporal Pole • rescorla_wagner", "Allen et al. (2023) • L Frontal Orbital Cortex • rescorla_wagner", "Allen et al. (2023) • L Lingual Gyrus • rescorla_wagner", "Seaman et al. (2023) • L Lateral Occipital Cortex, superior division • rescorla_wagner", "Seaman et al. (2023) • R Intracalcarine Cortex • rescorla_wagner", "Seaman et al. (2023) • R Middle Frontal Gyrus • rescorla_wagner", "Seaman et al. (2023) • L Postcentral Gyrus • rescorla_wagner", "Seaman et al. (2023) • R Parietal Opercular Cortex • rescorla_wagner", "Seaman et al. (2023) • L Angular Gyrus • rescorla_wagner", "Seaman et al. (2023) • Right Hippocampus • rescorla_wagner", "Seaman et al. (2023) • L Precuneous Cortex • rescorla_wagner", "Seaman et al. (2023) • L Planum Polare • rescorla_wagner", "Seaman et al. (2023) • L Cingulate Gyrus, posterior division • rescorla_wagner", "Seaman et al. (2023) • R Precuneous Cortex • rescorla_wagner", "Seaman et al. (2023) • L Inferior Temporal Gyrus, temporooccipital part • rescorla_wagner", "Seaman et al. (2023) • R Occipital Pole • rescorla_wagner", "Seaman et al. (2023) • L Precentral Gyrus • rescorla_wagner", "Seaman et al. (2023) • R Superior Frontal Gyrus • rescorla_wagner", "Seaman et al. (2023) • L Insular Cortex • rescorla_wagner", "Seaman et al. (2023) • L Superior Frontal Gyrus • rescorla_wagner", "Seaman et al. (2023) • L Lateral Occipital Cortex, superior division • rescorla_wagner", "Seaman et al. (2023) • L Heschl's Gyrus (includes H1 and H2) • rescorla_wagner", "Seaman et al. (2023) • R Lateral Occipital Cortex, inferior division • rescorla_wagner", "Seaman et al. (2023) • R Precentral Gyrus • rescorla_wagner", "Seaman et al. (2023) • L hippocampus • rescorla_wagner", "Martinez-Saito et al. (2019) • Left Putamen • heuristic", "Martinez-Saito et al. (2019) • Right Putamen • heuristic", "Martinez-Saito et al. (2019) • Left Caudate • heuristic", "Martinez-Saito et al. (2019) • Right Caudate • heuristic", "Martinez-Saito et al. (2019) • R Superior Parietal Lobule • heuristic", "Martinez-Saito et al. (2019) • R Subcallosal Cortex • heuristic", "Martinez-Saito et al. (2019) • R Frontal Orbital Cortex • heuristic", "Martinez-Saito et al. (2019) • Right Putamen • heuristic", "Martinez-Saito et al. (2019) • L Supramarginal Gyrus, anterior division • heuristic", "Martinez-Saito et al. (2019) • L Middle Frontal Gyrus • heuristic", "Martinez-Saito et al. (2019) • Left Caudate • heuristic", "Martinez-Saito et al. (2019) • Right Caudate • heuristic", "Martinez-Saito et al. (2019) • L Superior Frontal Gyrus • heuristic", "Martinez-Saito et al. (2019) • L Superior Parietal Lobule • heuristic", "Martinez-Saito et al. (2019) • L Supramarginal Gyrus, posterior division • heuristic", "Martinez-Saito et al. (2019) • L Superior Parietal Lobule • heuristic", "Martinez-Saito et al. (2019) • R Superior Parietal Lobule • heuristic", "Martinez-Saito et al. (2019) • R Frontal Pole • heuristic", "Martinez-Saito et al. (2019) • Right Putamen • heuristic", "Martinez-Saito et al. (2019) • Right Caudate • heuristic", "Martinez-Saito et al. (2019) • L Frontal Pole • heuristic", "Martinez-Saito et al. (2019) • Right Putamen • heuristic", "Allen et al. (2024) • Left Putamen • rescorla_wagner", "Allen et al. (2024) • L Lateral Occipital Cortex, inferior division • rescorla_wagner", "Allen et al. (2024) • R Cingulate Gyrus, posterior division • rescorla_wagner", "Allen et al. (2024) • R Inferior Temporal Gyrus, temporooccipital part • rescorla_wagner", "Allen et al. (2024) • L Postcentral Gyrus • rescorla_wagner", "Allen et al. (2024) • R cerebellum • rescorla_wagner", "Allen et al. (2024) • L cerebellum • rescorla_wagner", "Allen et al. (2024) • Frontal Medial Cortex • rescorla_wagner", "Allen et al. (2024) • R Superior Frontal Gyrus • rescorla_wagner", "Allen et al. (2024) • R Superior Frontal Gyrus • rescorla_wagner", "Allen et al. (2024) • R Precuneous Cortex • rescorla_wagner", "Allen et al. (2024) • R Insular Cortex • rescorla_wagner", "Allen et al. (2024) • L Frontal Opercular Cortex • rescorla_wagner", "Allen et al. (2024) • R Postcentral Gyrus • rescorla_wagner", "Allen et al. (2024) • R Temporal Pole • rescorla_wagner", "Allen et al. (2024) • L Frontal Orbital Cortex • rescorla_wagner", "Allen et al. (2024) • L Lingual Gyrus • rescorla_wagner"];
+  function extractCit(label){
+    if(!label) return "";
+    if(/^\s*\d+\s+peaks?/i.test(label)) return "";
+    var sep = label.indexOf(" \u2022 "); if(sep<0) sep = label.indexOf(" • ");
+    var s = sep>=0 ? label.slice(0,sep) : label;
+    var m = s.match(/^.*\(\d{4}[a-z]?\)/);
+    return (m ? m[0] : s).trim();
   }
-
-  // Robust citation extraction. The hover tooltip can contain MNI coordinates,
-  // axis labels, or our intended marker_label. We pick out only the substring
-  // that LOOKS like a citation: surname-ish words followed by (YYYY).
-  function extractCit(label) {
-    if (!label) return '';
-    // Skip cluster labels like "61 peaks · 38 studies · …"
-    if (/^\s*\d+\s+peaks?/i.test(label)) return '';
-    // Citation pattern: starts with capitalised author surname(s), ends with (YYYY).
-    // Allow et al., &, and accented characters in surnames.
-    var re = /([A-Z][A-Za-zÀ-ÿ'\-]+(?:\s+(?:&|et\s+al\.?))?(?:\s+[A-Z][A-Za-zÀ-ÿ'\-]+)?(?:\s+(?:&|et\s+al\.?))?)\s*\((\d{4})\)/;
-    var m = label.match(re);
-    if (m) return (m[1] + ' (' + m[2] + ')').trim();
-    // Fallback: substring before the first bullet, but only if it doesn't look
-    // like a coordinate triple (numbers-with-commas) or other junk.
-    var sep = label.indexOf(' \u2022 ');
-    if (sep < 0) sep = label.indexOf(' • ');
-    if (sep < 0) return '';
-    var cit = label.substring(0, sep).trim();
-    // Reject things that are obviously not citations: pure-numeric, coord-like.
-    if (!cit) return '';
-    if (/^[-−\d\.,\s]+$/.test(cit)) return '';            // coords only
-    if (!/[A-Za-z]/.test(cit)) return '';                       // no letters
-    return cit;
+  function route(cit){
+    if(!cit) return;
+    try{ if(window.parent && window.parent.brainStudyClicked){ window.parent.brainStudyClicked(cit); } }catch(e){}
+    try{ window.parent.postMessage({type:"brainStudyClick", citation:cit}, "*"); }catch(e){}
   }
-
-  function routeToParent(cit) {
-    if (!cit) { showBanner('no citation in label', false); return false; }
-    showBanner('routing → ' + cit, true);
-    var ok = false;
-    try {
-      // Direct call works if same origin (sibling files in one folder = same origin).
-      if (window.parent && window.parent.brainStudyClicked) {
-        window.parent.brainStudyClicked(cit);
-        ok = true;
-      }
-    } catch (err) { console.warn('[brain] direct call failed:', err.message); }
-    try {
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({type: 'brainStudyClick', citation: cit}, '*');
-        ok = true;
-      }
-    } catch (err) { console.warn('[brain] postMessage failed:', err.message); }
-    if (!ok) showBanner('could not reach parent window', false);
-    return ok;
-  }
-
-  // Plotly creates its hover label as a small group of SVG/HTML elements.
-  // We don't trust any single selector — instead, we walk a broad set of
-  // candidate hover containers and pick the one that ACTUALLY contains a
-  // citation pattern. That way coordinate-only text never gets returned.
-  var CIT_PROBE = /[A-Z][A-Za-zÀ-ÿ'\-]+(?:\s+(?:&|et\s+al\.?))?(?:\s+[A-Z][A-Za-zÀ-ÿ'\-]+)?\s*\(\d{4}\)/;
-  function readVisibleHoverText() {
-    var SELECTORS = [
-      '.hovertext', '.hoverlabel', '.nsewdrag + g',
-      'g.hoverlayer', 'g.hoverlayer text',
-      '.main-svg .hovertext', 'g.hovertext',
-    ];
-    for (var s = 0; s < SELECTORS.length; s++) {
-      var nodes = document.querySelectorAll(SELECTORS[s]);
-      for (var i = nodes.length - 1; i >= 0; i--) {
-        var t = (nodes[i].textContent || '').trim();
-        if (t && CIT_PROBE.test(t)) return t;
-      }
-    }
-    // Last-resort fallback: scan all visible text on the page for a citation.
-    var bodyTxt = (document.body.innerText || document.body.textContent || '');
-    var m = bodyTxt.match(CIT_PROBE);
-    return m ? m[0] : null;
-  }
-
-  function tryAttach() {
-    var plot = document.getElementById('connectome-plot');
-    if (!plot) { setTimeout(tryAttach, 200); return; }
-    plot.style.cursor = 'pointer';
-    showBanner('brain v3 ready · hover then click any peak', true);
-
-    if (plot.on) {
-      plot.on('plotly_click', function (data) {
-        if (data && data.points && data.points.length) {
-          routeToParent(extractCit(data.points[0].text || ''));
-        }
-      });
-      plot.on('plotly_hover', function (data) {
-        if (data && data.points && data.points.length) {
-          lastTooltipText = data.points[0].text || '';
-        }
-      });
-    }
-
-    // Universal click handler: fires on ANY click inside the iframe.
-    // Uses last hover text from Plotly OR DOM scrape OR finds the most
-    // recent point Plotly internally registered.
-    document.addEventListener('click', function (ev) {
-      var src = lastTooltipText || readVisibleHoverText() || '';
-      // Last-resort: walk the plot's internal hover state if Plotly has any
-      if (!src && plot && plot._hoverdata && plot._hoverdata.length) {
-        src = plot._hoverdata[0].text || '';
-      }
-      if (!src && plot && plot._lastHoverTime && (Date.now() - plot._lastHoverTime) < 800) {
-        // Very recent hover — try DOM scrape one more time
-        src = readVisibleHoverText() || '';
-      }
-      if (src) {
-        var cit = extractCit(src);
-        if (cit) routeToParent(cit);
-        else showBanner('that marker has no citation (cluster summary)', false);
-      } else {
-        showBanner('hover any peak first, then click — or click directly on a colored dot', false);
-      }
-    }, true);
-
-    // Track the last hover time so we can be lenient on near-misses
-    plot.addEventListener('mousemove', function () {
-      plot._lastHoverTime = Date.now();
+  function attach(){
+    var plot = document.getElementById("connectome-plot");
+    if(!plot || !plot.on){ setTimeout(attach,200); return; }
+    plot.style.cursor = "pointer";
+    plot.on("plotly_click", function(d){
+      if(!d || !d.points || !d.points.length) return;
+      var p = d.points[0];
+      // Only act on the markers trace (it has exactly ML.length points);
+      // ignore clicks that land on the brain mesh.
+      var isMarkers = p.data && p.data.x && p.data.x.length === ML.length;
+      if(!isMarkers) return;
+      var lbl = (typeof p.text==="string" && p.text) ? p.text
+              : (p.pointNumber!=null && ML[p.pointNumber]!=null) ? ML[p.pointNumber] : "";
+      route(extractCit(lbl));
     });
   }
-
-  if (document.readyState === 'complete') tryAttach();
-  else window.addEventListener('load', tryAttach);
+  if(document.readyState==="complete") attach(); else window.addEventListener("load", attach);
 })();
 </script>
 </body>
