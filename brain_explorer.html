@@ -12,10 +12,14 @@
 <div id="bar">
  <label>Colour by</label>
  <select id="colorby"><option value="model">model family</option><option value="domain">domain</option>
-  <option value="subtopic">subtopic</option><option value="region">brain region</option>
-  <option value="analysis">brain analysis (ROI / whole-brain)</option></select>
- <label>Show</label><select id="filterval"></select>
- <label>View</label><select id="viewmode"><option value="peaks">every peak</option><option value="studies">one point per study</option></select>
+  <option value="subtopic">subtopic</option><option value="region">brain region</option></select>
+ <select id="filterval"></select>
+ <label>Analysis</label>
+ <select id="analysis"><option value="__all__">all</option><option value="whole-brain">whole-brain</option><option value="ROI">ROI</option><option value="both (ROI + whole-brain)">both</option></select>
+ <label>Weighting</label>
+ <select id="viewmode"><option value="peaks">peak count (every peak)</option><option value="studies">study count (one per study)</option></select>
+ <label>Brain outline</label>
+ <select id="outline"><option value="off">hide &mdash; dots clickable</option><option value="on">show</option></select>
  <span id="legend"></span>
 </div>
 <div id="brain"></div><div id="banner"></div>
@@ -33,7 +37,14 @@ function attr(p,by){return by==='region'?(p.regions[0]||'(outside)'):p[by];}
 function values(by){var s={};POINTS.forEach(p=>{(by==='region'?p.regions:[p[by]]).forEach(v=>{if(v)s[v]=(s[v]||0)+1;});});
  return Object.entries(s).sort((a,b)=>b[1]-a[1]);}
 function colorMap(by){var vs=values(by).map(e=>e[0]),m={};vs.forEach((v,i)=>m[v]=PALETTE[i%PALETTE.length]);return m;}
-function subset(by,val){return POINTS.filter(p=>val==='__all__'?true:(by==='region'?p.regions.includes(val):p[by]===val));}
+function subset(by,val){
+ var an=document.getElementById('analysis').value;
+ return POINTS.filter(function(p){
+  var okv = val==='__all__' ? true : (by==='region'? p.regions.includes(val) : p[by]===val);
+  var oka = an==='__all__' ? true : p.analysis===an;
+  return okv && oka;
+ });
+}
 function studyAgg(pts){var m={};pts.forEach(p=>{(m[p.sid]=m[p.sid]||[]).push(p);});
  return Object.keys(m).map(function(sid){var g=m[sid],n=g.length;
   return {x:g.reduce((a,p)=>a+p.x,0)/n,y:g.reduce((a,p)=>a+p.y,0)/n,z:g.reduce((a,p)=>a+p.z,0)/n,
@@ -41,19 +52,23 @@ function studyAgg(pts){var m={};pts.forEach(p=>{(m[p.sid]=m[p.sid]||[]).push(p);
    analysis:g[0].analysis,regions:g[0].regions,aal:g[0].aal,n:n};});}
 function legendCounts(disp,by){var s={};disp.forEach(p=>{(by==='region'?p.regions:[p[by]]).forEach(v=>{if(v)s[v]=(s[v]||0)+1;});});
  return Object.entries(s).sort((a,b)=>b[1]-a[1]);}
+function rnd(v){return Math.round(v);}
 function draw(){
  var by=document.getElementById('colorby').value, val=document.getElementById('filterval').value||'__all__';
- var mode=document.getElementById('viewmode').value;
+ var mode=document.getElementById('viewmode').value, outline=document.getElementById('outline').value;
  var cmap=colorMap(by), base=subset(by,val);
  var disp = mode==='studies' ? studyAgg(base) : base;
- var sz = mode==='studies' ? 6.5 : 4.2;
+ var sz = mode==='studies' ? 7 : 4.5;
  var sc={type:'scatter3d',mode:'markers',
   x:disp.map(p=>p.x),y:disp.map(p=>p.y),z:disp.map(p=>p.z),
   customdata:disp.map(p=>p.cit),
-  text:disp.map(p=> mode==='studies' ? (p.cit+' · '+p.n+' peaks (study centroid)') : (p.cit+' · '+p.aal+' · '+p.model)),
+  text:disp.map(function(p){return mode==='studies'
+     ? (p.cit+'<br>study centroid of '+p.n+' peaks &nbsp;|&nbsp; click to open paper')
+     : (p.cit+'<br>('+rnd(p.x)+', '+rnd(p.y)+', '+rnd(p.z)+') &nbsp;·&nbsp; '+(p.regions[0]||p.aal||'')+' &nbsp;·&nbsp; '+p.model+'<br>click to open paper');}),
   hovertemplate:'%{text}<extra></extra>',name:'studies',
-  marker:{size:sz,opacity:0.92,color:disp.map(p=>cmap[attr(p,by)]||'#888'),line:{width:0}}};
- Plotly.react('brain',[...MESHES,sc],LAYOUT,{responsive:true,displayModeBar:false}).then(wire);
+  marker:{size:sz,opacity:0.95,color:disp.map(p=>cmap[attr(p,by)]||'#888'),line:{width:0}}};
+ var traces = (outline==='on') ? [...MESHES,sc] : [sc];
+ Plotly.react('brain',traces,LAYOUT,{responsive:true,displayModeBar:false}).then(wire);
  var unit = mode==='studies' ? ' studies' : ' peaks';
  var lg=legendCounts(disp,by).slice(0,10).map(e=>'<span style="color:'+(cmap[e[0]])+'">&#9679;</span> '+e[0]+' ('+e[1]+')').join('  ');
  document.getElementById('legend').innerHTML='<b>'+disp.length+unit+'</b> &nbsp; '+lg;
@@ -73,8 +88,7 @@ function fillFilter(){var by=document.getElementById('colorby').value,sel=docume
   values(by).map(e=>'<option value="'+e[0].replace(/"/g,'&quot;')+'">'+e[0]+' ('+e[1]+')</option>').join('');
  if([...sel.options].some(o=>o.value===cur))sel.value=cur;}
 document.getElementById('colorby').addEventListener('change',()=>{fillFilter();draw();});
-document.getElementById('filterval').addEventListener('change',draw);
-document.getElementById('viewmode').addEventListener('change',draw);
+['filterval','viewmode','analysis','outline'].forEach(function(id){document.getElementById(id).addEventListener('change',draw);});
 fillFilter();draw();
 window.addEventListener('message',e=>{if(e.data&&e.data.type==='brainFilter'){
  document.getElementById('colorby').value=e.data.by||'region';fillFilter();
