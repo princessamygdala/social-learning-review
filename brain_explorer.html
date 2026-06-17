@@ -17,7 +17,7 @@
  <label>Analysis</label>
  <select id="analysis"><option value="__all__">all</option><option value="whole-brain">whole-brain</option><option value="ROI">ROI</option><option value="both (ROI + whole-brain)">both</option></select>
  <label>Weighting</label>
- <select id="viewmode"><option value="peaks">peak count (every peak)</option><option value="studies">study count (one per study)</option></select>
+ <select id="viewmode"><option value="studies" selected>study count (one dot per study x region)</option><option value="peaks">peak count (every peak)</option></select>
  <label>Brain</label>
  <select id="outline"><option value="rings">glass outline (clickable)</option><option value="solid">solid surface (not clickable)</option><option value="off">none</option></select>
  <label>PE</label>
@@ -67,13 +67,18 @@ function subset(by,val){
   return okv && oka && peOk(p) && conOk(p);
  });
 }
-function studyAgg(pts){var m={};pts.forEach(p=>{(m[p.sid]=m[p.sid]||[]).push(p);});
- return Object.keys(m).map(function(sid){var g=m[sid],n=g.length;
-  return {x:g.reduce((a,p)=>a+p.x,0)/n,y:g.reduce((a,p)=>a+p.y,0)/n,z:g.reduce((a,p)=>a+p.z,0)/n,
-   cit:g[0].cit,sid:sid,model:g[0].model,domain:g[0].domain,subtopic:g[0].subtopic,
-   analysis:g[0].analysis,regions:g[0].regions,aal:g[0].aal,n:n};});}
-function legendCounts(disp,by){var s={};disp.forEach(p=>{(by==='region'?p.regions:[p[by]]).forEach(v=>{if(v)s[v]=(s[v]||0)+1;});});
- return Object.entries(s).sort((a,b)=>b[1]-a[1]);}
+// study-weighting on a spatial map: keep ONE real peak per (study x AAL parcel),
+// so a paper reporting many coordinates in one region contributes a single dot
+// (anatomy preserved; no centroid averaging across scattered regions).
+function studyAgg(pts){var seen={},out=[];
+ pts.forEach(function(p){var key=p.sid+'|'+(p.aal||(p.x+','+p.y+','+p.z));
+  if(seen[key])return; seen[key]=1; out.push(p);});
+ return out;}
+// in study mode the per-region tally counts UNIQUE STUDIES (dedupe by sid).
+function legendCounts(disp,by,mode){var s={};
+ disp.forEach(function(p){(by==='region'?p.regions:[p[by]]).forEach(function(v){if(!v)return;
+   if(mode==='studies'){(s[v]=s[v]||{})[p.sid]=1;}else{s[v]=(s[v]||0)+1;}});});
+ return Object.entries(s).map(function(e){return [e[0],mode==='studies'?Object.keys(e[1]).length:e[1]];}).sort((a,b)=>b[1]-a[1]);}
 function rnd(v){return Math.round(v);}
 function draw(){
  var by=document.getElementById('colorby').value, val=document.getElementById('filterval').value||'__all__';
@@ -85,15 +90,16 @@ function draw(){
   x:disp.map(p=>p.x),y:disp.map(p=>p.y),z:disp.map(p=>p.z),
   customdata:disp.map(p=>p.cit),
   text:disp.map(function(p){return mode==='studies'
-     ? (p.cit+'<br>study centroid of '+p.n+' peaks &nbsp;|&nbsp; click to open paper')
+     ? (p.cit+'<br>'+(p.regions[0]||p.aal||'')+' ('+rnd(p.x)+', '+rnd(p.y)+', '+rnd(p.z)+') &nbsp;|&nbsp; one dot per study x region &nbsp;·&nbsp; click to open paper')
      : (p.cit+'<br>('+rnd(p.x)+', '+rnd(p.y)+', '+rnd(p.z)+') &nbsp;·&nbsp; '+(p.regions[0]||p.aal||'')+' &nbsp;·&nbsp; '+p.model+'<br>click to open paper');}),
   hovertemplate:'%{text}<extra></extra>',name:'studies',
   marker:{size:sz,opacity:0.95,color:disp.map(p=>cmap[attr(p,by)]||'#888'),line:{width:0}}};
  var traces = outline==='solid' ? [...MESHES,sc] : outline==='rings' ? [...RINGS,sc] : [sc];
  Plotly.react('brain',traces,LAYOUT,{responsive:true,displayModeBar:false}).then(wire);
  var unit = mode==='studies' ? ' studies' : ' peaks';
- var lg=legendCounts(disp,by).slice(0,10).map(e=>'<span style="color:'+(cmap[e[0]])+'">&#9679;</span> '+e[0]+' ('+e[1]+')').join('  ');
- document.getElementById('legend').innerHTML='<b>'+disp.length+unit+'</b> &nbsp; '+lg;
+ var lg=legendCounts(disp,by,mode).slice(0,10).map(e=>'<span style="color:'+(cmap[e[0]])+'">&#9679;</span> '+e[0]+' ('+e[1]+')').join('  ');
+ var headcount = mode==='studies' ? Object.keys(disp.reduce(function(a,p){a[p.sid]=1;return a;},{})).length : disp.length;
+ document.getElementById('legend').innerHTML='<b>'+headcount+unit+'</b> &nbsp; '+lg;
 }
 const LAYOUT={scene:{xaxis:{visible:false},yaxis:{visible:false},zaxis:{visible:false},
  aspectmode:'data',dragmode:'turntable',camera:{eye:{x:0,y:-1.7,z:0.35}},bgcolor:'#fbfaf7'},
