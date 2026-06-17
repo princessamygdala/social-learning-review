@@ -87,7 +87,7 @@ function draw(){
  document.getElementById('legend').innerHTML='<b>'+disp.length+unit+'</b> &nbsp; '+lg;
 }
 const LAYOUT={scene:{xaxis:{visible:false},yaxis:{visible:false},zaxis:{visible:false},
- aspectmode:'data',camera:{eye:{x:0,y:-1.7,z:0.35}},bgcolor:'#fbfaf7'},
+ aspectmode:'data',dragmode:'turntable',camera:{eye:{x:0,y:-1.7,z:0.35}},bgcolor:'#fbfaf7'},
  margin:{l:0,r:0,t:0,b:0},showlegend:false,paper_bgcolor:'#fbfaf7'};
 function wire(){var gd=document.getElementById('brain');
  try{gd.removeAllListeners&&gd.removeAllListeners('plotly_click');}catch(e){}
