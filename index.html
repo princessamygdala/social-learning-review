@@ -4830,7 +4830,7 @@ function fwSetExamples(side, kind, key) {
   }
   let labelText, examples;
   if (side === 'ctx') {
-    labelText = 'Context  ·  examples (the wrapper that modulates the whole episode)';
+    labelText = 'Context  ·  examples (the surrounding conditions that modulate the whole episode)';
     examples = FW_CONTEXT_EXAMPLES;
   } else {
     const sideName = side === 'src' ? 'Source' : 'Target';
@@ -4846,9 +4846,21 @@ function fwSetExamples(side, kind, key) {
 }
 
 function initFwSvgHover() {
-  // Examples-on-hover were removed from the figure itself (per request); the
-  // example explorer below (source/target dropdowns) still provides examples.
-  return;
+  // Hover (or tap) a chip in the figure -> show examples in the panel BELOW the
+  // figure (not as on-figure tooltips), driven by the chip's data-side/kind/key.
+  const svg = document.getElementById('fig2-stc-nested');
+  if (!svg) return;
+  const chips = svg.querySelectorAll('[data-side][data-key]');
+  chips.forEach(el => {
+    el.style.cursor = 'pointer';
+    const show = () => fwSetExamples(el.dataset.side, el.dataset.kind, el.dataset.key);
+    el.addEventListener('mouseenter', show);
+    el.addEventListener('click', show);      // tap support
+    el.addEventListener('focus', show);
+    el.setAttribute('tabindex', '0');
+  });
+  // Reset to default text when the pointer leaves the whole figure.
+  svg.addEventListener('mouseleave', () => fwSetExamples(null));
 }
 
 function initFrameworkPage() {
