@@ -1459,24 +1459,26 @@ Each section is collapsible — click the heading to expand or collapse.
   <summary>5. Social-parameter explorer: <em>how do fitted social parameters distribute across studies?</em></summary>
   <div style="padding: 0.8rem 0;">
     <p style="font-size: 0.92rem; color: var(--text-muted);">
-    Each dot is one study's reported value for a social parameter (learning
-    rate, weighting term, etc.). Hover any dot to see the citation and the
-    parameter name; click to open the paper. Use the toggles to group/color
-    by study attribute, and the parameter-name filter to isolate, e.g.,
-    only learning rates ("α / alpha"). Note: parameter names are not
-    standardized across the literature — interpret cross-paper comparisons
-    with care.
+    Each dot is one study's reported value for a parameter. Parameters are
+    grouped by <strong>function</strong>, not by symbol &mdash; α, η and "a" all
+    count as a learning rate &mdash; so this is a handful of categories, not 170+
+    different names. Hover a dot for the citation and original symbol; click to
+    open the paper. Group/color by a study attribute, or filter to one parameter
+    category. (See the <em>Study maps → Models &amp; parameters</em> tab for the
+    full social vs non-social breakdown.)
     </p>
     <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 0.6rem; font-size: 0.92rem;">
       <label style="color: var(--text-muted);">Color/group by:</label>
-      <span class="pill param-grp active" data-grp="population">Population</span>
+      <span class="pill param-grp active" data-grp="category">Parameter category</span>
+      <span class="pill param-grp" data-grp="is_social">Social vs non-social</span>
+      <span class="pill param-grp" data-grp="population">Population</span>
       <span class="pill param-grp" data-grp="topic">Topic</span>
       <span class="pill param-grp" data-grp="family">Model family</span>
       <span class="pill param-grp" data-grp="paradigm">Paradigm</span>
       <span style="flex:1;"></span>
-      <label style="color: var(--text-muted);">Parameter name:</label>
+      <label style="color: var(--text-muted);">Parameter category:</label>
       <select id="param-name-filter" style="padding: 0.3rem 0.5rem; font-size: 0.9rem;">
-        <option value="__all__">All parameters</option>
+        <option value="__all__">All categories</option>
       </select>
     </div>
     <div id="param-stats" style="font-size: 0.88rem; color: var(--text-muted); margin: 0.5rem 0 0.4rem;"></div>
@@ -4604,7 +4606,7 @@ function runTranslation() {
 
 // ---------------- Social-parameter explorer ----------------
 let PARAM_DATA = null;
-let PARAM_STATE = { grp: 'population', name: '__all__' };
+let PARAM_STATE = { grp: 'category', name: '__all__' };
 
 // ====================================================================
 // Models & parameters sub-tab
@@ -4807,11 +4809,10 @@ function renderParamPlot() {
       '<div class="sandbox-empty">No parsed parameter values in the study space.</div>';
     return;
   }
-  // Filter by chosen normalised parameter name. "__all__" = no filter.
-  // Use `name_norm` for grouping (so alpha/α/a all merge); fall back to raw name.
+  // Filter by chosen functional parameter category. "__all__" = no filter.
   const data = PARAM_STATE.name === '__all__'
     ? all
-    : all.filter(d => (d.name_norm || d.name || '').trim() === PARAM_STATE.name);
+    : all.filter(d => (d.category || 'other / uncategorized') === PARAM_STATE.name);
 
   const grpKey = PARAM_STATE.grp;
   const groups = paramGroupValues(data, grpKey);
@@ -4832,7 +4833,7 @@ function renderParamPlot() {
     (PARAM_STATE.name !== '__all__' ? ` · parameter: <em>${escHtml(PARAM_STATE.name)}</em>` : '') +
     ` · values from <strong>${minV.toFixed(3)}</strong> to <strong>${maxV.toFixed(3)}</strong>` +
     (median !== null ? ` · median <strong>${median.toFixed(3)}</strong>` : '') +
-    ` · ${groups.length} ${grpKey} groups`;
+    ` · ${groups.length} ${({category:'parameter-category', is_social:'social', population:'population', topic:'topic', family:'model-family', paradigm:'paradigm'}[grpKey] || grpKey)} groups`;
 
   // Layout: build SVG strip plot. Each group is a row; x axis = value.
   const W = Math.min(900, document.getElementById('param-plot').clientWidth || 760);
@@ -4914,18 +4915,18 @@ function renderParamPlot() {
 
 function initParamWidget() {
   const data = loadParamData();
-  // Populate name dropdown — group by normalised name (alpha/α/a all merge)
-  const nameCounts = new Map();
+  // Populate dropdown with functional categories (not raw symbols)
+  const catCounts = new Map();
   data.forEach(d => {
-    const n = (d.name_norm || d.name || '').trim();
-    if (n) nameCounts.set(n, (nameCounts.get(n) || 0) + 1);
+    const n = d.category || 'other / uncategorized';
+    catCounts.set(n, (catCounts.get(n) || 0) + 1);
   });
-  const names = [...nameCounts.entries()]
+  const cats = [...catCounts.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(e => `<option value="${escHtml(e[0])}">${escHtml(e[0])} (${e[1]})</option>`)
     .join('');
   const sel = document.getElementById('param-name-filter');
-  sel.innerHTML = '<option value="__all__">All parameters (' + data.length + ')</option>' + names;
+  sel.innerHTML = '<option value="__all__">All categories (' + data.length + ')</option>' + cats;
   sel.addEventListener('change', () => {
     PARAM_STATE.name = sel.value;
     renderParamPlot();
