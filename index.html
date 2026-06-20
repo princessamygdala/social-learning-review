@@ -890,6 +890,24 @@ Click a cell to filter the studies.
   </div>
 </div>
 
+<h4 style="margin-top: 2rem;">Type × content: what each type carries</h4>
+<p>
+The vocabulary nests content inside type. These two matrices unpack that: for each
+<strong>type</strong> (self / other / group / social structure / world), what kind
+of <strong>content</strong> is actually learned from it (source) or about it
+(target)? Click a cell to filter the studies.
+</p>
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:1rem;">
+  <div class="heatmap-wrap">
+    <div style="font-weight:600; color:var(--teal-dark); font-size:0.9rem; margin-bottom:0.3rem;">Source type × source content</div>
+    <div id="src-typecontent-heatmap"></div>
+  </div>
+  <div class="heatmap-wrap">
+    <div style="font-weight:600; color:var(--teal-dark); font-size:0.9rem; margin-bottom:0.3rem;">Target type × target content</div>
+    <div id="tgt-typecontent-heatmap"></div>
+  </div>
+</div>
+
 <h4 style="margin-top: 2.4rem;">Implementation-level gaps</h4>
 <p>
 Where the source × target matrix above flags <em>computational-level</em>
@@ -1878,7 +1896,7 @@ function showPage(name, push=true) {
         if (!BRAIN_REGIONS && typeof decodeB64Json === 'function') {
           try { BRAIN_REGIONS = decodeB64Json(BRAIN_REGIONS_B64); } catch (e) {}
         }
-        renderRegionGaps(); renderSocialParamGaps(); renderContentHeatmap();
+        renderRegionGaps(); renderSocialParamGaps(); renderContentHeatmap(); renderTypeContentHeatmaps();
       } catch (e) {}
     }, 50);
   }
@@ -2651,6 +2669,63 @@ function renderContentHeatmap() {
       renderStudies();
     });
   });
+}
+
+// Type × content matrices (one per role). role = 'source' | 'target'.
+function renderTypeContentHeatmap(containerId, role) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const typeField = role === 'source' ? 'source_types' : 'target_types';
+  const M = TYPE_VOCAB.map(() => CONTENT_VOCAB.map(() => 0));
+  STUDIES.forEach(s => {
+    const types = (s[typeField] || []).map(x => String(x).trim().toLowerCase());
+    const conts = contentOf(s, role);
+    types.forEach(ty => conts.forEach(c => {
+      const i = TYPE_VOCAB.indexOf(ty), j = CONTENT_VOCAB.indexOf(c);
+      if (i >= 0 && j >= 0) M[i][j]++;
+    }));
+  });
+  const max = Math.max(1, ...M.flat());
+  let html = '<table class="heatmap-table"><tr><th class="corner"></th>';
+  html += `<th colspan="${CONTENT_VOCAB.length}" style="background:transparent;">content</th></tr>`;
+  html += '<tr><th class="corner">type</th>';
+  CONTENT_VOCAB.forEach(l => html += `<th>${l}</th>`);
+  html += '</tr>';
+  M.forEach((row, i) => {
+    html += `<tr><th>${TYPE_VOCAB[i]}</th>`;
+    row.forEach((v, j) => {
+      if (v === 0) {
+        html += `<td class="heatmap-cell empty" data-ty="${TYPE_VOCAB[i]}" data-co="${CONTENT_VOCAB[j]}" title="No studies yet">0</td>`;
+      } else {
+        const t = v / max;
+        const r = Math.round(228 - t * (228 - 42));
+        const g = Math.round(242 - t * (242 - 110));
+        const b = Math.round(242 - t * (242 - 112));
+        const tx = t > 0.55 ? '#fff' : '#1a3838';
+        html += `<td class="heatmap-cell" data-ty="${TYPE_VOCAB[i]}" data-co="${CONTENT_VOCAB[j]}" style="background:rgb(${r},${g},${b});color:${tx};" title="Click to filter: ${role} ${TYPE_VOCAB[i]} / ${CONTENT_VOCAB[j]}">${v}</td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</table>';
+  el.innerHTML = html;
+  const typeSet = role === 'source' ? 'source' : 'target';
+  const contentSet = role === 'source' ? 'source_content' : 'target_content';
+  el.querySelectorAll('.heatmap-cell[data-ty]').forEach(td => {
+    td.addEventListener('click', () => {
+      if (parseInt(td.textContent) === 0) return;
+      ['source','target','model','method','flags','field','players','partner','outcome','task_paradigm','tax_topic','tax_domain','tax_pop','tax_popclass','tax_mod','source_content','target_content'].forEach(k => FILTER_STATE[k] && FILTER_STATE[k].clear && FILTER_STATE[k].clear());
+      FILTER_STATE.cellSource = null; FILTER_STATE.cellTarget = null;
+      FILTER_STATE[typeSet].add(td.dataset.ty);
+      FILTER_STATE[contentSet].add(td.dataset.co);
+      showPage('papers');
+      renderStudies();
+    });
+  });
+}
+function renderTypeContentHeatmaps() {
+  renderTypeContentHeatmap('src-typecontent-heatmap', 'source');
+  renderTypeContentHeatmap('tgt-typecontent-heatmap', 'target');
 }
 
 // ==========================================================
@@ -5463,6 +5538,7 @@ try {
   initFilters();
   initHeatmap();
   try { renderContentHeatmap(); } catch (e) {}
+  try { renderTypeContentHeatmaps(); } catch (e) {}
   renderStudies();
   const dt = (performance.now() - t0).toFixed(0);
   diag(`Loaded ${STUDIES.length} studies in ${dt} ms (v2 / base64 inline)`, false);
