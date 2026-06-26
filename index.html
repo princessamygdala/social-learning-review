@@ -174,6 +174,7 @@ input[type="text"]:focus, textarea:focus, select:focus { outline: 2px solid var(
 .card:hover { box-shadow: 0 3px 14px var(--shadow); }
 .card .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; margin-bottom: 0.35rem; }
 .card .citation { font-family: 'Libre Baskerville', serif; font-weight: 700; font-size: 1.04rem; color: var(--deep-green); }
+.card .paper-title { font-size: 0.92rem; color: var(--text-muted); line-height: 1.35; margin-bottom: 0.4rem; }
 .card .focus { font-size: 0.95rem; color: var(--text); margin: 0.4rem 0; }
 .card .badges { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.45rem 0; }
 .card .meta-row { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem; }
@@ -2385,7 +2386,7 @@ function passesFilters(s) {
     if (!s.target_types.includes(FILTER_STATE.cellTarget)) return false;
   }
   if (FILTER_STATE.search) {
-    const hay = (s.citation_short + ' ' + s.study_focus + ' ' + (s.learning_mode_description || '')).toLowerCase();
+    const hay = (s.citation_short + ' ' + (s.title || parseTitle(s.citation)) + ' ' + s.study_focus + ' ' + (s.learning_mode_description || '')).toLowerCase();
     if (!hay.includes(FILTER_STATE.search)) return false;
   }
   return true;
@@ -2413,6 +2414,23 @@ function badgeForPopulation(pop) {
 function escapeHtml(s) {
   return String(s == null ? '' : s)
     .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
+// Derive the paper title from the full APA citation. Handles journal articles
+// (Title plain, then *Journal*) and theses/preprints (where the title itself is
+// italicized). Dates may be a year, "(n.d.)", or "(accepted/preprint)".
+function parseTitle(cit) {
+  cit = String(cit == null ? '' : cit).trim();
+  const m = cit.match(/^[\s\S]*?\([^)]*\)\.\s+/);   // up to and incl. first "(...). "
+  if (!m) return '';
+  let rest = cit.slice(m[0].length);
+  if (rest.startsWith('*')) {                         // italicized title (thesis/preprint)
+    const m2 = rest.match(/^\*(.+?)\*/);
+    return m2 ? m2[1].trim() : '';
+  }
+  const cut = rest.indexOf(' *');                     // cut before italicized journal
+  if (cut !== -1) rest = rest.slice(0, cut);
+  return rest.replace(/\.\s*$/, '').trim();
 }
 
 // Light formatting normalizer for short display strings (stray commas / spaces).
@@ -2467,6 +2485,7 @@ function groupByPaper(studies) {
     return {
       paper_id: pid,
       citation_short: first.citation_short,
+      title: first.title || parseTitle(first.citation),
       year: first.year,
       doi: first.doi,
       publication_type: first.publication_type,
@@ -2522,6 +2541,7 @@ function paperCard(p) {
         <span style="color: var(--text-muted); font-size: 0.85rem;">${escapeHtml(p.year || '')}</span>
         ${doi}
       </div>
+      ${p.title ? `<div class="paper-title">${escapeHtml(p.title)}</div>` : ''}
       <div class="badges">
         ${fams}
         <span class="badge ${methodBadge}">${escapeHtml(methodStr)}${p.has_neural ? ' · neural' : ''}</span>
