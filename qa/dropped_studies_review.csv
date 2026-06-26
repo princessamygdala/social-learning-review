@@ -1,0 +1,59 @@
+study_id,paper_id,citation_short,year,recorded_drop_reason,human_decision,human_rationale,reviewer,date_checked,status
+a80c37dd74c4998a4_s1,a80c37dd74c4998a4,Aquino (2022),,"Dissertation; only Study 3 (Chapter IV) qualifies for social learning inclusion criteria. Flag as potential duplicate of Aquino et al. (2020) JNeurosci. The ""social agent"" is a pre-recorded video -- the authors themselves note this does not control for social vs. non-social observation.",,,,,pending
+a525b90f489739776_s1,a525b90f489739776,Barnby (2021),,"thesis -- Chapter 4 is the qualifying computational modeling study. Chapters 2 (psychometric), 3 (behavioral, no computational model of learning), and 5 (pharmacological, no computational model of learning) do not independently meet computational modeling inclusion criteria. Note: Chapter 4 was published as Barnby et al. (2020) in PLOS Computational Biology -- flag as potential duplicate if that published paper also appears in the corpus.",,,,,pending
+ab55cdf703297acb8_s1,ab55cdf703297acb8,Cui (2021),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+aa7a0276ada8cc7db_s2,aa7a0276ada8cc7db,Cui (2021),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+ab55cdf703297acb8_s2,ab55cdf703297acb8,Cui (2021),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+aa7a0276ada8cc7db_s1,aa7a0276ada8cc7db,Cui (2021),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+aa7a0276ada8cc7db_s3,aa7a0276ada8cc7db,Cui (2021),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+ab55cdf703297acb8_s3,ab55cdf703297acb8,Cui (2021),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+ab13df8717184ccee_s2,ab13df8717184ccee,Gelpi (2025),,"MEDIUM confidence -- the ""social agent"" is automated (pre-recorded MARL trajectories), which CLAUDE.md says to flag
+
+### CANNOT FIND
+- Formal computational model fitted to human behavioral data (none exists; human data analyzed with LMER/GLMER only)
+- Model comparison metrics for human data (no formal model comparison)
+- Individual-level model fits for human participants
+
+### OTHER NOTES
+- This experiment (Chapter 5, Experiment 4) was published as part of: Gelpi, R. A., Tang, Y., Jackson, E. C., & Cunningham, W. A. (2025). Social coordination perpetuates stereotypic expectations and behaviours across generations in deep multi-agent reinforcement learning. PNAS Nexus, 4(3), pgaf076. https://doi.org/10.1093/pnasnexus/pgaf076. If this published paper is also in the papers folder, flag as duplicate_suspected.
+- The MARL simulations (Ch5 Exps 1-3) provide the theoretical framework but do not involve human data.
+- The ""social agent"" in this task is an automated system (pre-recorded MARL market decider or agent trajectories), which should be flagged per CLAUDE.md.
+- No supplement file found for this thesis.",,,,,pending
+ab13df8717184ccee_s1,ab13df8717184ccee,Gelpi (2025),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+a0cbdcc9dfd3eb389_s3,a0cbdcc9dfd3eb389,Guennouni (2022),,FLAG: Social agent is an automated HMM system. Participants were told they faced human opponents but actually faced computer agents. Qualifies with flag.,,,,,pending
+a0cbdcc9dfd3eb389_s5,a0cbdcc9dfd3eb389,Guennouni (2022),,"FLAG: No human behavioral data collected. Purely computational simulation — POMDP trustee agents play against HMM investors. Does not meet inclusion criterion of ""uses human behavioral data."" However, the POMDP framework and utility function parameters were calibrated against human data from Chapter 3.",,,,,pending
+a0cbdcc9dfd3eb389_s4,a0cbdcc9dfd3eb389,Guennouni (2022),,"FLAG: This chapter fits HMMs to archival Trust Game data (King-Casas et al., 2008, and a BPD study; N=381 games total). It does not collect new behavioral data. It is a descriptive modeling exercise — the HMMs are not models of a learning process but rather unsupervised characterizations of behavioral patterns. Borderline eligible: uses computational modeling and human behavioral data, but the ""learning"" component is the HMM identifying latent states rather than modeling a learning process per se.",,,,,pending
+a0cbdcc9dfd3eb389_s1,a0cbdcc9dfd3eb389,Guennouni (2022),,"Borderline social context — opponent is a pre-programmed computer agent with fixed strategy, not a social agent. Competitive zero-sum games lack cooperative social dimension. However, task explicitly framed as opponent modeling and the work tests opponent model transfer, which is a social cognitive ability. FLAG but do not exclude.",,,,,pending
+a0cbdcc9dfd3eb389_s2,a0cbdcc9dfd3eb389,Guennouni (2022),,"FLAG: Social agent is an automated HMM system, not a human partner. However, the HMM was trained on human behavioral data and participants were not told the opponent was a computer. Qualifies with flag.",,,,,pending
+af2e673d18005bef0_s1,af2e673d18005bef0,Hauke (2024),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+a9463d098431ad6f7_s2,a9463d098431ad6f7,Hopkins (2021),,"Does not meet social context criterion. This is an fMRI study of sensory uncertainty processing (visual spatial uncertainty in threat/shock avoidance task). No social agent, no social context. Uses hierarchical Bayesian model and associative learning models, N=39, with fMRI.",,,,,pending
+a9463d098431ad6f7_s1,a9463d098431ad6f7,Hopkins (2021),,"Potential duplicate -- Chapter 4 was published as Hopkins et al. (2021) in Computational Psychiatry (doi: 10.5334/cpsy.57). Check if this published paper is already in the corpus; if so, flag this thesis chapter as duplicate_suspected. Also: thesis format (flag which chapters qualify -- only Ch4 and social component of Ch5).
+  - Confidence: HIGH",,,,,pending
+a8f7679fe2ca5768f_s4,a8f7679fe2ca5768f,Iotzov (2022),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+aaf1f44b770d3f388_s1,aaf1f44b770d3f388,Lau (2019),,"Does not meet inclusion criteria: no computational modeling; no learning over time (one-shot categorization task). This is a repetition suppression fMRI study of social categorization, not a computational modeling study of social learning.",,,,,pending
+aaf1f44b770d3f388_s3,aaf1f44b770d3f388,Lau (2019),,"duplicate_suspected -- Published version exists in folder: ""Social structure learning in human anterior insula. .txt"" (Lau, Gershman, & Cikara, 2020, eLife). Extract from published version instead.",,,,,pending
+aaf1f44b770d3f388_s2,aaf1f44b770d3f388,Lau (2019),,"duplicate_suspected -- Published version exists in folder: ""Discovering social groups via latent structure learning. .txt"" (Lau, Pouncy, Gershman, & Cikara, 2020, J Exp Psychol Gen). Extract from published version instead.",,,,,pending
+aff9a4147d1697d89_s1,aff9a4147d1697d89,Maier (n.d.),,"LOW confidence -- paper may not qualify as ""social learning"" per review criteria; the authors explicitly distinguish their mechanism from social learning",,,,,pending
+a3ab5b69538196322_s1,a3ab5b69538196322,Na (2021),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+a3ab5b69538196322_s2,a3ab5b69538196322,Na (2021),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+af0d22b397299194d_s1,af0d22b397299194d,Navidi (2023),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+ac99aa56310d34352_s1,ac99aa56310d34352,Rhoads (2022),,Full text not accessible (ProQuest preview only -- 24 of ~140+ pages available). Study 2 is the only study meeting all inclusion criteria. FLAG: Study 2 is suspected duplicate of published journal article 'Neurocomputational basis of learning when choices simultaneously affect both oneself and others' (Rhoads et al.) found in the papers folder. Study 1 does not use computational modeling or learning over time (neural representation study). Study 3 is a prosocial decision-making/valuation study using descriptive hyperbolic discounting -- borderline for learning-over-time criterion.,,,,,pending
+aa28098964fa29f4a_s1,aa28098964fa29f4a,Rybicki (2022),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+aa28098964fa29f4a_s2,aa28098964fa29f4a,Rybicki (2022),,"duplicate_suspected -- This chapter is published as Rybicki, A. J., Sowden, S. L., Schuster, B. A., & Cook, J. L. (2022). Dopaminergic challenge dissociates learning from primary versus secondary sources of information. eLife, 11, e74893. This published version exists separately in the corpus at `papers/Dopaminergic challenge dissociates learning from primary versus secondary sources of information.txt`. Extract from the published version to avoid double-counting.""
+
+---
+
+## ADDITIONAL FIELDS
+
+### Flagged fields (across both studies):",,,,,pending
+a461a7be9cf637fef_s1,a461a7be9cf637fef,Saulin (2022),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+a8f7679fe2ca5768f_s2,a8f7679fe2ca5768f,Saulin (2022),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+a8f7679fe2ca5768f_s3,a8f7679fe2ca5768f,Saulin (2022),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+a8f7679fe2ca5768f_s1,a8f7679fe2ca5768f,Saulin (2022),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
+a461a7be9cf637fef_s4,a461a7be9cf637fef,Saulin (2022),,"Borderline -- DDM of empathy + financial incentive decision process, not learning over time. **Also published as standalone paper (doi: 10.1080/17470919.2022.2115550) -- flag as duplicate_suspected if that paper appears separately in corpus.**",,,,,pending
+a461a7be9cf637fef_s2,a461a7be9cf637fef,Saulin (2022),,"Borderline -- computational modeling of decision process, not learning over time. DDM characterizes how decisions are made, not how associations are learned. The z-parameter changes across blocks, but this reflects changes in decision bias after different motive induction strengths, not trial-by-trial learning.",,,,,pending
+a461a7be9cf637fef_s3,a461a7be9cf637fef,Saulin (2022),,"Borderline -- DDM of multi-motive prosocial decision process, not learning over time. **Also published as standalone paper (doi: 10.1016/j.neuroimage.2021.118827) -- flag as duplicate_suspected if that paper appears separately in corpus.**",,,,,pending
+a8d9fd46a0700f631_s1,a8d9fd46a0700f631,Siegel (2019),,Dissertation with published papers. Chapters 3-4 published as Siegel et al. (2018) *Nature Human Behaviour*; Chapter 5 published as Siegel et al. (2019) *Nature Communications*. Flag `duplicate_suspected` if those papers are in the corpus. Chapter 6 (BPD) may be unique.,,,,,pending
+a71bd3ab98fb45944_s1,a71bd3ab98fb45944,Son (2023),,"HIGH -- duplicate_suspected, this is clearly the preprint of the PNAS paper",,,,,pending
+aaab6d101a666b350_s1,aaab6d101a666b350,Zhang (2020),,`duplicate_suspected` -- This is the bioRxiv preprint (2019) of the published Science Advances paper (2020) already extracted as cov_350 in batch 11. The published version is the more authoritative source and should be retained; this preprint should be marked ineligible.,,,,,pending
+aa2845674ac4d1137_s1,aa2845674ac4d1137,Zhang (2020),,(no eligibility flag recorded — likely duplicate/superseded version; confirm),,,,,pending
