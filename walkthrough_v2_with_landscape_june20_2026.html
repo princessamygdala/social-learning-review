@@ -354,4 +354,52 @@ const _origRender=render;
 render=function(){_origRender();updateTime();};
 render();
 })();
+</script><script>
+/* Make cited papers clickable: wrap "Author et al., YEAR" style citations in a
+   Google Scholar link. Runs on load and on any dynamically rendered content. */
+(function () {
+  var CITE = /\b([A-Z][A-Za-z.'’-]+(?:\s+et al\.| (?:&amp;|&|and) [A-Z][A-Za-z.'’-]+)?),?\s*\(?((?:19|20)\d{2})\)?/g;
+  var SKIP = { A: 1, SCRIPT: 1, STYLE: 1, BUTTON: 1 };
+  function linkifyTextNode(node) {
+    var text = node.nodeValue;
+    if (!text || text.length < 6 || !/\d{4}/.test(text)) return;
+    CITE.lastIndex = 0;
+    if (!CITE.test(text)) return;
+    CITE.lastIndex = 0;
+    var frag = document.createDocumentFragment(), last = 0, m;
+    while ((m = CITE.exec(text)) !== null) {
+      if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      var a = document.createElement('a');
+      a.href = 'https://scholar.google.com/scholar?q=' + encodeURIComponent(m[0].replace(/&amp;/g, '&'));
+      a.target = '_blank'; a.rel = 'noopener';
+      a.style.color = 'inherit'; a.style.textDecoration = 'underline dotted';
+      a.title = 'Look up on Google Scholar';
+      a.textContent = m[0].replace(/&amp;/g, '&');
+      frag.appendChild(a);
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+    node.parentNode.replaceChild(frag, node);
+  }
+  function walk(root) {
+    var stack = [root];
+    while (stack.length) {
+      var n = stack.pop();
+      if (n.nodeType === 3) { linkifyTextNode(n); continue; }
+      if (n.nodeType !== 1 || SKIP[n.tagName]) continue;
+      for (var c = n.firstChild; c; c = c.nextSibling) stack.push(c);
+    }
+  }
+  var obs, pending = false;
+  function run() {
+    pending = false;
+    if (obs) obs.disconnect();
+    try { walk(document.body); } catch (e) {}
+    if (obs) obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+  function schedule() { if (!pending) { pending = true; setTimeout(run, 120); } }
+  if (document.readyState !== 'loading') run(); else document.addEventListener('DOMContentLoaded', run);
+  obs = new MutationObserver(schedule);
+  obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+})();
 </script>
