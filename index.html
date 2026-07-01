@@ -174,8 +174,8 @@ input[type="text"]:focus, textarea:focus, select:focus { outline: 2px solid var(
 .card:hover { box-shadow: 0 3px 14px var(--shadow); }
 .card .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; margin-bottom: 0.35rem; }
 .card .citation { font-family: 'Libre Baskerville', serif; font-weight: 700; font-size: 1.04rem; color: var(--deep-green); }
-.card .paper-title { font-size: 0.92rem; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 0.4rem; }
-.card .focus { font-size: 0.95rem; color: var(--text); margin: 0.4rem 0; }
+.card .paper-title { font-size: 1.04rem; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 0.4rem; }
+.card .focus { font-size: 0.9rem; color: var(--text-muted); margin: 0.4rem 0; }
 .card .badges { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.45rem 0; }
 .card .meta-row { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem; }
 
@@ -446,6 +446,7 @@ footer { padding: 2rem; text-align: center; color: var(--text-muted); font-size:
   </span>
   <a href="#" data-page="submit">Submit</a>
   <a href="#" data-page="about">About</a>
+  <a href="#" id="nav-search" data-page="papers" title="Search studies" aria-label="Search studies" style="font-size:1.1rem;">🔍</a>
 </nav>
 
 <!-- ================= HOME ================= -->
@@ -1030,7 +1031,18 @@ or year. Free-text search runs across the citation and study focus.
 </p>
 
 <div class="filter-bar">
-  <input type="text" class="search-box" id="search-input" placeholder="Search citation or study focus…">
+  <div style="display:flex;flex-wrap:wrap;gap:0.6rem;align-items:center;">
+    <input type="text" class="search-box" id="search-input" placeholder="Search citation, focus, topic, region…" style="flex:1;min-width:220px;">
+    <label style="font-size:0.9rem;color:var(--text-muted);">Sort by:
+      <select id="sort-by" style="padding:0.35rem 0.5rem;">
+        <option value="author" selected>Author</option>
+        <option value="title">Title</option>
+        <option value="year">Year (newest)</option>
+        <option value="year_asc">Year (oldest)</option>
+        <option value="focus">Study focus</option>
+      </select>
+    </label>
+  </div>
 
   <div class="filter-row" id="filter-row-active" style="display:none;">
     <label>Active filters:</label>
@@ -2018,6 +2030,13 @@ source.
   </div>
 </div>
 <footer>
+<div style="max-width:760px;margin:0 auto 0.7rem;padding:0.6rem 0.9rem;background:var(--amber-light,#fdf6e3);border:1px solid var(--amber,#c99a2e);border-radius:8px;color:var(--text);font-size:0.86rem;line-height:1.4;">
+  <strong>AI can make mistakes. Human checkers, too!</strong> Please read the entire
+  article before you publish on the results here, or verify the data extraction
+  thoroughly if you use it. If you happen to find an error, we would be grateful if
+  you could let us know (via the <a href="#" data-page="submit">Submit</a> tab) so we
+  can correct it.
+</div>
 Living systematic review · snapshot through batch 11 · maintained by the
 review team. <span style="opacity: 0.65;" title="Paper coming soon">Paper (PDF · coming soon)</span>
 </footer>
@@ -2110,6 +2129,15 @@ document.querySelectorAll('[data-page]').forEach(el => {
     showPage(el.dataset.page);
   });
 });
+// magnifying-glass nav button: go to Papers and focus the search box
+document.getElementById('nav-search').addEventListener('click', () => {
+  setTimeout(() => { const si = document.getElementById('search-input'); if (si) { si.focus(); si.select(); } }, 60);
+});
+// sort dropdown
+(function () {
+  const sb = document.getElementById('sort-by');
+  if (sb) sb.addEventListener('change', () => { SORT_STATE = sb.value; renderStudies(); });
+})();
 
 // ==========================================================
 // Load studies + initialise UI
@@ -2763,6 +2791,25 @@ function paperCard(p) {
   `;
 }
 
+let SORT_STATE = 'author';
+function authorKey(cit) {
+  // first author surname from "Surname et al. (Year)" / "Surname & Other (Year)"
+  return String(cit || '').replace(/\s*\(.*$/, '').split(/,| et al\.| &| and /i)[0].trim().toLowerCase();
+}
+function sortPapers(arr) {
+  const yr = p => parseInt(String(p.year), 10) || 0;  // "2020.0" -> 2020 (parseInt stops at '.')
+  // string compare with empties pushed to the end
+  const scmp = (a, b) => { const ea = !a, eb = !b; if (ea || eb) return ea - eb; return a.localeCompare(b); };
+  const cmp = {
+    author: (a, b) => scmp(authorKey(a.citation_short), authorKey(b.citation_short)) || yr(a) - yr(b),
+    title: (a, b) => scmp(String(a.title || '').toLowerCase(), String(b.title || '').toLowerCase()),
+    year: (a, b) => (yr(b) || -1) - (yr(a) || -1) || scmp(authorKey(a.citation_short), authorKey(b.citation_short)),
+    year_asc: (a, b) => (yr(a) || 1e9) - (yr(b) || 1e9) || scmp(authorKey(a.citation_short), authorKey(b.citation_short)),
+    focus: (a, b) => scmp(String(a.study_focus || '').toLowerCase(), String(b.study_focus || '').toLowerCase()),
+  }[SORT_STATE] || (() => 0);
+  arr.sort(cmp);
+}
+
 function renderStudies() {
   const filtered = STUDIES.filter(passesFilters);
   // (study-count line now set after grouping below)
@@ -2792,9 +2839,10 @@ function renderStudies() {
     el.textContent = n > 0 ? n : '';
   });
 
-  // Render up to 200 cards (most users won't scroll past)
+  // Render up to 300 cards (most users won't scroll past)
   // Group by paper: one card per paper, modal expands to per-study sections
   const byPaper = groupByPaper(filtered);
+  sortPapers(byPaper);
   const list = document.getElementById('study-list');
   list.innerHTML = byPaper.slice(0, 300).map(paperCard).join('');
   if (byPaper.length > 300) {
