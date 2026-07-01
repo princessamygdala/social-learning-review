@@ -174,7 +174,7 @@ input[type="text"]:focus, textarea:focus, select:focus { outline: 2px solid var(
 .card:hover { box-shadow: 0 3px 14px var(--shadow); }
 .card .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem; margin-bottom: 0.35rem; }
 .card .citation { font-family: 'Libre Baskerville', serif; font-weight: 700; font-size: 1.04rem; color: var(--deep-green); }
-.card .paper-title { font-size: 1.04rem; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 0.4rem; }
+.card .paper-title { font-size: 1.04rem; font-weight: 700; color: #2b2b2b; line-height: 1.35; margin-bottom: 0.4rem; }
 .card .focus { font-size: 0.9rem; color: var(--text-muted); margin: 0.4rem 0; }
 .card .badges { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.45rem 0; }
 .card .meta-row { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.3rem; }
@@ -446,8 +446,14 @@ footer { padding: 2rem; text-align: center; color: var(--text-muted); font-size:
   </span>
   <a href="#" data-page="submit">Submit</a>
   <a href="#" data-page="about">About</a>
-  <a href="#" id="nav-search" data-page="papers" title="Search studies" aria-label="Search studies" style="font-size:1.1rem;">🔍</a>
+  <a href="#" id="nav-search" title="Search the site" aria-label="Search the site" style="display:inline-flex;align-items:center;border-bottom:none;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+  </a>
 </nav>
+<div id="site-search" style="display:none;position:absolute;top:52px;right:12px;z-index:200;width:min(440px,92vw);background:white;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,0.18);overflow:hidden;">
+  <input id="site-search-input" type="text" placeholder="Search studies, topics, maps… (e.g. limitations, trust, brain)" style="width:100%;box-sizing:border-box;border:none;border-bottom:1px solid var(--border);padding:0.7rem 0.9rem;font-size:0.95rem;outline:none;">
+  <div id="site-search-results" style="max-height:60vh;overflow-y:auto;"></div>
+</div>
 
 <!-- ================= HOME ================= -->
 <section class="page active" id="page-home">
@@ -458,7 +464,15 @@ footer { padding: 2rem; text-align: center; color: var(--text-muted); font-size:
       A living systematic review of computational models of social
       learning. <strong>444 studies</strong> from <strong>388
       papers</strong>, with interactive brain maps, study networks,
-      and a paper-by-paper drill-down.
+      and a paper-by-paper view.
+    </p>
+    <p class="prose" style="color: var(--text-muted);">
+      Our aim is an open, living repository and shared space for the field: a place to
+      easily search and access the literature on social learning that uses computational
+      modeling, to visualize and search the study space along the dimensions you care
+      about, to surface new research questions through the search tools and interactive
+      visualizations, and for researchers to publish their own paper, task, and code (or
+      submit a correction) so the review keeps updating in a living way.
     </p>
     <p class="prose" style="color: var(--text-muted);">
       Use the tabs above to browse studies (Papers), learn about social
@@ -1299,21 +1313,11 @@ into canonical anatomical regions; click any region for the full paper
 list.
 </p>
 
-<div class="figure-wrap" style="text-align:left; background: var(--amber-light); border-left: 4px solid var(--amber); padding: 0.8rem 1.1rem; margin: 0.6rem 0;">
-<strong>How to read this map (and how not to).</strong> This is an
-<strong>exploratory, qualitative</strong> view. Each dot is a single reported
-<em>peak</em> coordinate, not a thresholded statistical map, so it shows
-<em>where</em> the field has reported effects, not their size or reliability.
-Caveats: studies differ in whether they ran <strong>whole-brain</strong> or
-<strong>ROI</strong> analyses (ROI work only reports peaks inside the regions it
-examined), in smoothing and thresholds, and in how completely they reported
-coordinates; peaks here are <strong>not weighted</strong> by sample size or effect
-size. Please do not draw strong localization conclusions from dot density alone.
-What it is good for: spotting under-sampled regions, seeing how model families and
-topics distribute anatomically, and finding studies to read. For quantitative
-claims we encourage a proper <strong>coordinate-based meta-analysis</strong> (e.g.
-ALE or SDM) built on the peak coordinates and effect sizes we extracted, ideally
-analyzing whole-brain and ROI studies separately.
+<div class="figure-wrap" style="text-align:left; background: var(--amber-light); border-left: 4px solid var(--amber); padding: 0.7rem 1.1rem; margin: 0.6rem 0; font-size:0.9rem;">
+Each dot is one reported peak coordinate, so this map shows <em>where</em> the field
+has reported effects, not their size or reliability, and it is best for exploring
+rather than drawing firm localization conclusions. For quantitative claims, run a
+proper meta-analysis on the coordinates and effect sizes we extracted.
 </div>
 
 <!-- External brain controls replaced by the in-frame explorer controls (colour-by + filter). -->
@@ -2050,12 +2054,12 @@ source.
   </div>
 </div>
 <footer>
-<div style="max-width:760px;margin:0 auto 0.7rem;padding:0.6rem 0.9rem;background:var(--amber-light,#fdf6e3);border:1px solid var(--amber,#c99a2e);border-radius:8px;color:var(--text);font-size:0.86rem;line-height:1.4;">
-  <strong>AI can make mistakes. Human checkers, too!</strong> Please read the entire
-  article before you publish on the results here, or verify the data extraction
-  thoroughly if you use it. If you happen to find an error, we would be grateful if
-  you could let us know (via the <a href="#" data-page="submit">Submit</a> tab) so we
-  can correct it.
+<div style="max-width:760px;margin:0 auto 0.6rem;color:var(--text-muted);font-size:0.8rem;line-height:1.45;">
+  Data extraction on this website is based on AI and human spot checks. AI can make
+  mistakes and humans, too! Please always verify information against the original
+  research paper. If you notice an error, feel free to let us know via the
+  <a href="#" data-page="submit">Submit</a> tab or email
+  <a href="mailto:compsocialreview@gmail.com">compsocialreview@gmail.com</a>.
 </div>
 Living systematic review · snapshot through batch 11 · maintained by the
 review team. <span style="opacity: 0.65;" title="Paper coming soon">Paper (PDF · coming soon)</span>
@@ -2150,10 +2154,64 @@ document.querySelectorAll('[data-page]').forEach(el => {
     showPage(el.dataset.page);
   });
 });
-// magnifying-glass nav button: go to Papers and focus the search box
-document.getElementById('nav-search').addEventListener('click', () => {
-  setTimeout(() => { const si = document.getElementById('search-input'); if (si) { si.focus(); si.select(); } }, 60);
-});
+// ---- site-wide search dropdown (magnifying glass) ----
+const SITE_DESTINATIONS = [
+  { label: 'Papers', sub: 'browse all studies', kw: ['paper', 'studies', 'browse', 'list'], run: q => { showPage('papers'); } },
+  { label: 'Brain map', sub: 'where effects are reported', kw: ['brain', 'region', 'neural', 'fmri', 'coordinate', 'anatomy'], run: () => { showPage('maps'); switchMapsTab('brain'); } },
+  { label: 'Study network', sub: 'studies clustered by attribute', kw: ['network', 'cluster', 'graph'], run: () => { showPage('maps'); switchMapsTab('network'); } },
+  { label: 'Study network coloured by limitation', sub: 'group studies by their main limitation', kw: ['limitation', 'limitations', 'caveat', 'weakness'], run: () => { showPage('maps'); switchMapsTab('network'); setTimeout(() => { if (typeof NET_STATE !== 'undefined') { NET_STATE.groupKey = 'primary_limitation'; const s = document.getElementById('net-groupby'); if (s) s.value = 'primary_limitation'; netRender(); } }, 120); } },
+  { label: 'Timeline', sub: 'how the field grew over time', kw: ['timeline', 'year', 'history', 'over time', 'growth'], run: () => { showPage('maps'); switchMapsTab('time'); } },
+  { label: 'Task paradigms', sub: 'tasks used across studies', kw: ['task', 'paradigm', 'design'], run: () => { showPage('maps'); switchMapsTab('tasks'); } },
+  { label: 'Models & parameters', sub: 'model families, parameters, interventions', kw: ['model', 'parameter', 'family', 'rl', 'bayesian', 'intervention', 'learning rate', 'self-report'], run: () => { showPage('maps'); switchMapsTab('models'); } },
+  { label: 'Research frontier', sub: 'gaps, open questions, replicated findings', kw: ['frontier', 'gap', 'gaps', 'future', 'open question', 'consensus', 'finding', 'replicated'], run: () => { showPage('maps'); switchMapsTab('frontier'); } },
+  { label: 'Study atlas', sub: 'how studies relate to each other', kw: ['atlas', 'related', 'similar', 'shared tags', 'connections'], run: () => { showPage('maps'); switchMapsTab('atlas'); } },
+  { label: 'Simulation sandbox', sub: 'interactive widgets', kw: ['sandbox', 'simulation', 'pooling', 'widget'], run: () => { showPage('maps'); switchMapsTab('sandbox'); } },
+  { label: 'What is social learning?', sub: 'framework and readings', kw: ['framework', 'learn', 'readings', 'intro', 'definition'], run: () => { showPage('framework'); } },
+  { label: 'Submit a paper or correction', sub: '', kw: ['submit', 'correction', 'add', 'error', 'contribute'], run: () => { showPage('submit'); } },
+];
+function siteSearchToggle(open) {
+  const box = document.getElementById('site-search');
+  const show = open === undefined ? box.style.display === 'none' : open;
+  box.style.display = show ? 'block' : 'none';
+  if (show) setTimeout(() => { const i = document.getElementById('site-search-input'); if (i) { i.focus(); i.select(); } }, 30);
+}
+function siteSearchRender() {
+  const q = (document.getElementById('site-search-input').value || '').toLowerCase().trim();
+  const out = document.getElementById('site-search-results');
+  if (!q) { out.innerHTML = '<div style="padding:0.7rem 0.9rem;color:var(--text-muted);font-size:0.85rem;">Type to search studies and jump to any map. Try “limitations”, “trust”, or “brain”.</div>'; return; }
+  // destinations
+  const dests = SITE_DESTINATIONS.filter(d => d.label.toLowerCase().includes(q) || d.kw.some(k => k.includes(q) || q.includes(k)));
+  const alwaysPapers = { label: `Search papers for “${q}”`, sub: 'open the Papers tab filtered to this text', run: () => { showPage('papers'); const si = document.getElementById('search-input'); if (si) { si.value = q; } FILTER_STATE.search = q; renderStudies(); } };
+  // studies (reuse the same hay as the Papers search)
+  const studyHits = STUDIES.filter(s => {
+    const hay = (s.citation_short + ' ' + (s.title || '') + ' ' + s.study_focus + ' ' + (s.learning_mode_description || '')).toLowerCase() + ' ' + tagKeywords(s);
+    return hay.includes(q);
+  });
+  const seen = new Set(); const uniqStudies = [];
+  for (const s of studyHits) { if (!seen.has(s.paper_id)) { seen.add(s.paper_id); uniqStudies.push(s); } if (uniqStudies.length >= 6) break; }
+  let html = '';
+  const row = (title, sub, onclick) => `<div class="site-hit" style="padding:0.5rem 0.9rem;cursor:pointer;border-bottom:1px solid #f0ece4;" onclick="${onclick}"><div style="font-weight:600;color:var(--deep-green);font-size:0.9rem;">${escHtml(title)}</div>${sub ? `<div style="color:var(--text-muted);font-size:0.8rem;">${escHtml(sub)}</div>` : ''}</div>`;
+  html += `<div style="padding:0.35rem 0.9rem 0.15rem;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.03em;color:var(--text-muted);">Go to</div>`;
+  html += row(alwaysPapers.label, alwaysPapers.sub, `siteSearchGo('papers-search','${encodeURIComponent(q)}')`);
+  dests.forEach((d, i) => { html += row(d.label, d.sub, `siteSearchGo('dest',${i},'${encodeURIComponent(q)}')`); });
+  if (uniqStudies.length) {
+    html += `<div style="padding:0.45rem 0.9rem 0.15rem;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.03em;color:var(--text-muted);">Studies</div>`;
+    uniqStudies.forEach(s => { html += row(s.citation_short, (s.study_focus_short || s.study_focus || '').slice(0, 70), `siteSearchGo('study','${s.paper_id}')`); });
+  }
+  out.innerHTML = html;
+  // re-bind current dest list for index lookup
+  siteSearchGo._dests = dests;
+}
+function siteSearchGo(kind, a, b) {
+  siteSearchToggle(false);
+  if (kind === 'study') { openPaperModal(a); return; }
+  if (kind === 'papers-search') { const q = decodeURIComponent(a); showPage('papers'); const si = document.getElementById('search-input'); if (si) si.value = q; FILTER_STATE.search = q; renderStudies(); return; }
+  if (kind === 'dest') { const d = siteSearchGo._dests[a]; if (d) d.run(decodeURIComponent(b)); return; }
+}
+document.getElementById('nav-search').addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); siteSearchToggle(); });
+document.getElementById('site-search-input').addEventListener('input', siteSearchRender);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') siteSearchToggle(false); });
+document.addEventListener('click', e => { if (!e.target.closest('#site-search') && !e.target.closest('#nav-search')) siteSearchToggle(false); });
 // sort dropdown
 (function () {
   const sb = document.getElementById('sort-by');
