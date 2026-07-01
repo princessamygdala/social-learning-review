@@ -913,22 +913,16 @@ Click a cell to filter the studies.
   </div>
 </div>
 
-<h4 style="margin-top: 2rem;">Type × content: what each type carries</h4>
+<h4 style="margin-top: 2rem;">Source (type × content) → target (type × content)</h4>
 <p>
-The vocabulary nests content inside type. For each <strong>type</strong> (self /
-other / group / social structure / world), each bar shows what kind of
-<strong>content</strong> is actually learned from it (source) or about it (target),
-as a proportion. Click a segment to filter the studies.
+The full learning arrow at content resolution. Each <strong>row</strong> is a
+source <em>type × content</em> pair (what the agent learns from), each
+<strong>column</strong> a target <em>type × content</em> pair (what is updated);
+the cell counts studies with that combination. Darker = more studies. Click a cell
+to filter the studies. Rows and columns are grouped by type.
 </p>
-<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:1rem;">
-  <div class="heatmap-wrap">
-    <div style="font-weight:600; color:var(--teal-dark); font-size:0.9rem; margin-bottom:0.3rem;">Source type × source content</div>
-    <div id="src-typecontent-heatmap"></div>
-  </div>
-  <div class="heatmap-wrap">
-    <div style="font-weight:600; color:var(--teal-dark); font-size:0.9rem; margin-bottom:0.3rem;">Target type × target content</div>
-    <div id="tgt-typecontent-heatmap"></div>
-  </div>
+<div class="heatmap-wrap" style="overflow-x:auto;">
+  <div id="srctgt-content-heatmap"></div>
 </div>
 
 <h4 style="margin-top: 2.4rem;">Implementation-level gaps</h4>
@@ -3145,9 +3139,62 @@ function renderTypeContentHeatmap(containerId, role) {
     });
   });
 }
-function renderTypeContentHeatmaps() {
-  renderTypeContentHeatmap('src-typecontent-heatmap', 'source');
-  renderTypeContentHeatmap('tgt-typecontent-heatmap', 'target');
+function renderTypeContentHeatmaps() { renderSourceTargetContentHeatmap('srctgt-content-heatmap'); }
+
+const _TYPE_ABBR = { 'self': 'self', 'other': 'other', 'group': 'group', 'social structure': 'soc.str', 'world': 'world' };
+const _CONT_ABBR = { 'stimulus': 'stim', 'mental state': 'mental', 'world state': 'world', 'state': 'state', 'action/policy': 'action', 'outcome': 'outcome' };
+function _studyCombos(s, role) {
+  const types = (s[role + '_types'] || []).map(x => String(x).trim().toLowerCase()).filter(t => TYPE_VOCAB.includes(t));
+  const conts = contentOf(s, role);
+  const out = [];
+  types.forEach(t => conts.forEach(c => { const k = t + '|' + c; if (!out.includes(k)) out.push(k); }));
+  return out;
+}
+function renderSourceTargetContentHeatmap(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  // order helper: by type order, then content order
+  const orderKey = k => { const [t, c] = k.split('|'); return TYPE_VOCAB.indexOf(t) * 100 + CONTENT_VOCAB.indexOf(c); };
+  const srcSet = new Set(), tgtSet = new Set();
+  const cell = new Map();  // "src##tgt" -> count
+  STUDIES.forEach(s => {
+    const sc = _studyCombos(s, 'source'), tc = _studyCombos(s, 'target');
+    sc.forEach(x => srcSet.add(x));
+    tc.forEach(y => tgtSet.add(y));
+    sc.forEach(x => tc.forEach(y => { const k = x + '##' + y; cell.set(k, (cell.get(k) || 0) + 1); }));
+  });
+  const rows = [...srcSet].sort((a, b) => orderKey(a) - orderKey(b));
+  const cols = [...tgtSet].sort((a, b) => orderKey(a) - orderKey(b));
+  const max = Math.max(1, ...cell.values());
+  const lbl = k => { const [t, c] = k.split('|'); return { t, c, full: t + ' / ' + c }; };
+  let html = '<table class="heatmap-table" style="border-collapse:separate;border-spacing:1px;">';
+  // header row: corner + target combos (type abbr over content abbr)
+  html += '<tr><th class="corner" style="text-align:right;font-size:0.72rem;">source ↓ &nbsp; target →</th>';
+  cols.forEach(k => { const L = lbl(k); html += `<th style="padding:2px;background:transparent;"><div style="font-size:0.64rem;line-height:1.05;white-space:nowrap;"><div style="color:var(--teal-dark);font-weight:700;">${escHtml(_TYPE_ABBR[L.t] || L.t)}</div><div style="color:var(--text-muted);">${escHtml(_CONT_ABBR[L.c] || L.c)}</div></div></th>`; });
+  html += '</tr>';
+  rows.forEach(rk => {
+    const RL = lbl(rk);
+    html += `<tr><th style="text-align:right;font-size:0.74rem;white-space:nowrap;padding-right:0.4rem;"><span style="color:var(--teal-dark);font-weight:700;">${escHtml(RL.t)}</span> <span style="color:var(--text-muted);">${escHtml(_CONT_ABBR[RL.c] || RL.c)}</span></th>`;
+    cols.forEach(ck => {
+      const v = cell.get(rk + '##' + ck) || 0;
+      const [sty, sco] = rk.split('|'), [tty, tco] = ck.split('|');
+      if (v === 0) { html += `<td class="heatmap-cell empty" style="width:26px;height:22px;"></td>`; return; }
+      const t = v / max;
+      const r = Math.round(228 - t * (228 - 42)), g = Math.round(242 - t * (242 - 110)), b = Math.round(242 - t * (242 - 112));
+      const tx = t > 0.55 ? '#fff' : '#1a3838';
+      html += `<td class="stc-cell" data-sty="${escHtml(sty)}" data-sco="${escHtml(sco)}" data-tty="${escHtml(tty)}" data-tco="${escHtml(tco)}" style="width:26px;height:22px;text-align:center;font-size:0.72rem;cursor:pointer;background:rgb(${r},${g},${b});color:${tx};" title="${escHtml(RL.full)} → ${escHtml(lbl(ck).full)}: ${v} (click to filter)">${v}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</table>';
+  el.innerHTML = html;
+  el.querySelectorAll('.stc-cell').forEach(td => td.addEventListener('click', () => {
+    ['source', 'target', 'model', 'method', 'flags', 'field', 'players', 'partner', 'outcome', 'task_paradigm', 'tax_topic', 'tax_domain', 'tax_pop', 'tax_popclass', 'tax_mod', 'source_content', 'target_content'].forEach(k => FILTER_STATE[k] && FILTER_STATE[k].clear && FILTER_STATE[k].clear());
+    FILTER_STATE.cellSource = null; FILTER_STATE.cellTarget = null;
+    FILTER_STATE.source.add(td.dataset.sty); FILTER_STATE.source_content.add(td.dataset.sco);
+    FILTER_STATE.target.add(td.dataset.tty); FILTER_STATE.target_content.add(td.dataset.tco);
+    showPage('papers'); renderStudies();
+  }));
 }
 
 // ==========================================================
