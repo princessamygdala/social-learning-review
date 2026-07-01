@@ -3240,24 +3240,50 @@ function regionNetwork(name) {
   }
   return REGION_NETWORKS[3];
 }
+// Genuinely cross-network regions belong to more than one network.
+const REGION_OVERLAP = {
+  dmpfc: ['Salience / control'],        // mentalizing + executive control
+  vmpfc: ['Mentalizing / social'],      // reward-valuation + default/social
+  amygdala: ['Salience / control'],     // limbic + salience
+  ai: ['Limbic / other'],               // salience + interoceptive/limbic
+  insula: ['Limbic / other'],
+};
+function regionNetworks(name) {
+  const n = (name || '').toLowerCase().replace(/[^a-z]/g, '');
+  const nets = [regionNetwork(name)];
+  Object.keys(REGION_OVERLAP).forEach(k => {
+    if (n === k || n.includes(k)) REGION_OVERLAP[k].forEach(nm => {
+      const net = REGION_NETWORKS.find(x => x.name === nm);
+      if (net && !nets.includes(net)) nets.push(net);
+    });
+  });
+  return nets;
+}
 function renderRegionNetworks() {
   if (!BRAIN_REGIONS) { try { BRAIN_REGIONS = decodeB64Json(BRAIN_REGIONS_B64); } catch (e) { return; } }
   const el = document.getElementById('region-network-chart');
   if (!el) return;
   const rows = [...BRAIN_REGIONS.regions]
-    .map(r => ({ name: r.name, n: r.papers.length, net: regionNetwork(r.name) }))
+    .map(r => ({ name: r.name, n: r.papers.length, nets: regionNetworks(r.name) }))
     .sort((a, b) => b.n - a.n).slice(0, 18);
   const max = Math.max(1, ...rows.map(r => r.n));
+  let anyMulti = false;
   let html = '';
   rows.forEach(r => {
     const w = Math.round(100 * r.n / max);
+    if (r.nets.length > 1) anyMulti = true;
+    // split-colour bar when a region spans multiple networks
+    const fill = r.nets.length === 1 ? r.nets[0].color
+      : `linear-gradient(90deg, ${r.nets.map((nt, i) => `${nt.color} ${Math.round(i / r.nets.length * 100)}% ${Math.round((i + 1) / r.nets.length * 100)}%`).join(', ')})`;
+    const tip = r.nets.map(nt => nt.name).join(' + ');
     html += `<div style="display:flex;align-items:center;gap:0.5rem;margin:2px 0;font-size:0.85rem;">
       <span style="width:90px;text-align:right;color:var(--text);">${escapeHtml(r.name)}</span>
-      <span style="flex:1;background:#f0ece4;border-radius:3px;"><span style="display:inline-block;height:14px;width:${w}%;background:${r.net.color};border-radius:3px;" title="${escapeHtml(r.net.name)}"></span></span>
+      <span style="flex:1;background:#f0ece4;border-radius:3px;"><span style="display:inline-block;height:14px;width:${w}%;background:${fill};border-radius:3px;" title="${escapeHtml(tip)}"></span></span>
       <span style="width:28px;color:var(--text-muted);">${r.n}</span></div>`;
   });
   html += '<div style="margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted);">';
   html += REGION_NETWORKS.map(n => `<span style="margin-right:0.9rem;"><span style="display:inline-block;width:10px;height:10px;background:${n.color};border-radius:2px;"></span> ${n.name}</span>`).join('');
+  if (anyMulti) html += '<div style="margin-top:0.3rem;">A two-colour bar marks a region that belongs to more than one network (e.g. dmPFC spans mentalizing and control).</div>';
   html += '</div>';
   el.innerHTML = html;
 }
@@ -3886,6 +3912,13 @@ function wcTable(wc) {
   return `<table class="wc"><tbody>${body}</tbody></table>`;
 }
 
+// Paper IDs (or exact citation_short strings) that a human has verified.
+// Populate from the maintainers' list; empty = none verified yet.
+const HUMAN_VERIFIED = new Set([]);
+function isHumanVerified(head) {
+  return HUMAN_VERIFIED.has(head.paper_id) || HUMAN_VERIFIED.has(head.citation_short);
+}
+
 function openPaperModal(paperId) {
   const paperStudies = STUDIES.filter(x => x.paper_id === paperId);
   if (!paperStudies.length) return;
@@ -3899,8 +3932,10 @@ function openPaperModal(paperId) {
   const codeLink = (head.code_url || '').match(/^https?:\/\//)
     ? `<a href="${escHtml(head.code_url)}" target="_blank">code/repo</a>`
     : '';
+  const verified = isHumanVerified(head);
+  const reviewTag = `<span title="${verified ? 'A human reviewer has checked this paper’s eligibility and category extraction.' : 'This paper’s AI extraction has not yet been human-verified; please double-check against the original article.'}" style="color:var(--text-muted);font-size:0.8rem;border-bottom:1px dotted var(--text-muted);cursor:help;">${verified ? '✓ human-verified' : 'AI-extracted · not yet human-verified'}</span>`;
   document.getElementById('modal-meta').innerHTML =
-    `${escHtml(head.year || '')} · ${escHtml(head.publication_type || '—')} · ${doiLink}${codeLink ? ' · ' + codeLink : ''}`;
+    `${escHtml(head.year || '')} · ${escHtml(head.publication_type || '—')} · ${doiLink}${codeLink ? ' · ' + codeLink : ''} · ${reviewTag}`;
 
   // Render each study in its own block
   let body = '';
