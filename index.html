@@ -2255,7 +2255,7 @@ function initStats() {
 // Filter pills
 // ==========================================================
 const TYPE_VOCAB = ['self', 'other', 'group', 'social structure', 'world'];
-const CONTENT_VOCAB = ['stimulus', 'state', 'action/policy', 'outcome'];
+const CONTENT_VOCAB = ['stimulus', 'mental state', 'world state', 'state', 'action/policy', 'outcome'];
 
 // Parse source/target CONTENT live from the structured learning_mode_description.
 // role = 'source' | 'target'. Returns a deduped array of canonical content values.
@@ -2263,7 +2263,14 @@ function _canonContent(v) {
   v = (v || '').toLowerCase();
   if (v.includes('action') || v.includes('policy')) return 'action/policy';
   if (v.includes('outcome')) return 'outcome';
-  if (v.includes('state')) return 'state';
+  if (v.includes('state')) {
+    // split "state" into a mental (social) state vs a world (non-social) state
+    if (v.includes('mental state')) return 'mental state';
+    if (v.includes('world state')) return 'world state';
+    if (/belief|intention|emotion|feel|prefer|trait|value|esteem|desire|goal|attitude|trust|disposition|expect|\bmind|mental|fairness|reputation|competen|reliab|honest|intent/.test(v)) return 'mental state';
+    if (/environment|spatial|location|contingenc|probab|reward rate|structure|physical|\bworld|volatil|\brule|hidden state|regime|contextual state/.test(v)) return 'world state';
+    return 'state';
+  }
   if (v.includes('stimul')) return 'stimulus';
   return null;
 }
