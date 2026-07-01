@@ -440,6 +440,7 @@ footer { padding: 2rem; text-align: center; color: var(--text-muted); font-size:
       <a href="#" class="nav-sub" data-mtab="tasks"   style="padding: 0.3rem 0.4rem; color: white; border-bottom: 0;">Task paradigms</a>
       <a href="#" class="nav-sub" data-mtab="models"  style="padding: 0.3rem 0.4rem; color: white; border-bottom: 0;">Models &amp; parameters</a>
       <a href="#" class="nav-sub" data-mtab="frontier" style="padding: 0.3rem 0.4rem; color: white; border-bottom: 0;">Research frontier</a>
+      <a href="#" class="nav-sub" data-mtab="atlas" style="padding: 0.3rem 0.4rem; color: white; border-bottom: 0;">Study atlas</a>
       <a href="#" class="nav-sub" data-mtab="sandbox" style="padding: 0.3rem 0.4rem; color: white; border-bottom: 0;">Simulation Sandbox</a>
     </span>
   </span>
@@ -1121,6 +1122,7 @@ Several interactive ways to look at the study space. Pick a sub-tab below.
   <span class="pill maps-tab" data-mtab="tasks">Task paradigms</span>
   <span class="pill maps-tab" data-mtab="models">Models &amp; parameters</span>
   <span class="pill maps-tab" data-mtab="frontier">Research frontier</span>
+  <span class="pill maps-tab" data-mtab="atlas">Study atlas</span>
   <span class="pill maps-tab" data-mtab="sandbox">Simulation Sandbox</span>
 </div>
 <div class="maps-pane" id="maps-pane-network">
@@ -1454,6 +1456,26 @@ above), then click any question to open the paper that raised it.
 </div>
 <div id="frontier-questions"></div>
 </div><!--/maps-pane-frontier-->
+
+<div class="maps-pane" id="maps-pane-atlas" style="display:none;">
+<h2 style="margin-top: 0;">Study atlas</h2>
+<p class="prose" style="color: var(--text-muted);">
+How any one study relates to the rest of the field. Pick a study; the atlas ranks
+every other study by how many tags they share, and shows exactly which tags overlap
+(topic, population, learning modality, model family, domain). Studies can carry
+several tags per dimension, so a cooperation-and-trust study links to both. Click a
+neighbour to re-center the atlas on it, or its citation to open the paper.
+</p>
+<div class="filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin:0.4rem 0 0.6rem;">
+  <label>Focus study:
+    <select id="atlas-focus" style="padding:0.35rem 0.5rem; min-width:280px;"></select>
+  </label>
+</div>
+<div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.3rem;">Count shared tags from:</div>
+<div id="atlas-dims" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.8rem;"></div>
+<div id="atlas-ego" style="margin-bottom:1rem;"></div>
+<div id="atlas-list"></div>
+</div><!--/maps-pane-atlas-->
 
 <!-- Open questions / empty-cells view moved to the "What is social learning?" tab (below the explorer). -->
 
@@ -2354,6 +2376,46 @@ function buildPillRow(containerId, items, key) {
 // ==========================================================
 // Render filtered studies
 // ==========================================================
+// Extra synonyms so tags are findable by words that differ from the column name.
+const TAG_SYNONYMS = {
+  tax_mod_vicarious_outcome: 'observational observing empathy vicarious learning',
+  tax_mod_action_observation: 'observational imitation emulation copying watching',
+  tax_topic_mentalizing: 'theory of mind tom mentalising perspective taking',
+  tax_topic_emotion_inference: 'emotion affect facial expression',
+  tax_topic_norm_conformity: 'conformity social norms majority peer influence',
+  tax_topic_reputation_learning: 'reputation gossip impression',
+  tax_topic_fairness_inequity: 'fairness inequity inequality justice',
+  tax_topic_prosocial_altruism: 'prosocial altruism generosity charity helping donation',
+  tax_topic_moral_harm: 'moral morality harm guilt blame',
+  tax_topic_social_approval_reward: 'approval social reward praise likes acceptance',
+  tax_topic_trust: 'trust trustworthiness trust game reciprocity',
+  tax_topic_cooperation: 'cooperation cooperative collaboration public goods',
+  tax_topic_advice_taking: 'advice adviser advisor recommendation guidance',
+  tax_topic_social_influence: 'social influence persuasion',
+  tax_topic_intergroup_bias: 'intergroup ingroup outgroup prejudice stereotype bias',
+  tax_topic_stereotype_updating: 'stereotype prejudice bias group',
+  tax_topic_self_esteem: 'self-esteem self esteem self worth self concept',
+  tax_topic_empathy_vicarious: 'empathy vicarious compassion',
+  tax_topic_strategic_reasoning: 'strategic game theory opponent bargaining negotiation',
+  tax_topic_social_hierarchy: 'hierarchy status dominance rank',
+  tax_topic_social_network_structure: 'network structure social network graph',
+  tax_topic_volatility: 'volatility uncertainty change point environment',
+};
+function tagKeywords(s) {
+  let out = [];
+  for (const k in s) {
+    if (s[k] !== 1) continue;
+    if (/^(tax_topic_|tax_mod_|tax_model_|tax_domain_|tax_popclass_|pop_|fd_theme_)/.test(k)) {
+      out.push(k.replace(/^(tax_topic_|tax_mod_|tax_model_|tax_domain_|tax_popclass_|pop_|fd_theme_)/, '').replace(/_/g, ' '));
+      if (TAG_SYNONYMS[k]) out.push(TAG_SYNONYMS[k]);
+    }
+  }
+  // also fold in primary/secondary topic strings + model class/family
+  ['tax_rr_primary_topic', 'tax_rr_secondary_topic', 'model_family', 'model_class', 'task_paradigm', 'population_category']
+    .forEach(f => { if (s[f]) out.push(String(s[f]).replace(/_/g, ' ')); });
+  return out.join(' ').toLowerCase();
+}
+
 function passesFilters(s) {
   if (FILTER_STATE.source.size > 0) {
     if (!s.source_types.some(t => FILTER_STATE.source.has(t))) return false;
@@ -2423,7 +2485,7 @@ function passesFilters(s) {
     if (!s.target_types.includes(FILTER_STATE.cellTarget)) return false;
   }
   if (FILTER_STATE.search) {
-    const hay = (s.citation_short + ' ' + (s.title || parseTitle(s.citation)) + ' ' + s.study_focus + ' ' + (s.learning_mode_description || '')).toLowerCase();
+    const hay = (s.citation_short + ' ' + (s.title || parseTitle(s.citation)) + ' ' + s.study_focus + ' ' + (s.learning_mode_description || '')).toLowerCase() + ' ' + tagKeywords(s);
     if (!hay.includes(FILTER_STATE.search)) return false;
   }
   return true;
@@ -3505,6 +3567,7 @@ function switchMapsTab(name) {
   if (name === 'tasks') setTimeout(() => renderTasksHeatmap(), 50);
   if (name === 'models') setTimeout(() => renderModelsPane(), 50);
   if (name === 'frontier') setTimeout(() => renderFrontier(), 50);
+  if (name === 'atlas') setTimeout(() => renderAtlas(), 50);
   if (name === 'sandbox') setTimeout(() => initSandbox(), 50);
   if (name === 'readings') setTimeout(() => initReadings(), 50);
   if (name === 'time') setTimeout(() => {
@@ -5249,6 +5312,121 @@ function renderFrontierQuestions() {
       </div>`;
   }).join('') + (data.length > shown.length ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.4rem;">Showing first ${shown.length} of ${data.length}. Narrow with the theme filter or search.</div>` : '');
 }
+
+// ====================================================================
+// Study atlas: how one study relates to the rest (shared-tag network)
+// ====================================================================
+const ATLAS_DIMS = [
+  { key: 'topic',   prefix: 'tax_topic_',    label: 'Topic',    color: '#2E7E63' },
+  { key: 'pop',     prefix: 'tax_popclass_', label: 'Population',color: '#B07A2A' },
+  { key: 'mod',     prefix: 'tax_mod_',      label: 'Modality', color: '#7F77DD' },
+  { key: 'model',   prefix: 'tax_model_',    label: 'Model',    color: '#3A7E8A' },
+  { key: 'domain',  prefix: 'tax_domain_',   label: 'Domain',   color: '#A8553A' },
+];
+let ATLAS_STATE = { focus: null, dims: new Set(['topic', 'pop', 'mod', 'model', 'domain']) };
+let ATLAS_TAGSETS = null;
+
+function atlasTagsets() {
+  if (ATLAS_TAGSETS) return ATLAS_TAGSETS;
+  ATLAS_TAGSETS = STUDIES.map(s => {
+    const t = {};
+    ATLAS_DIMS.forEach(d => {
+      t[d.key] = Object.keys(s).filter(k => k.startsWith(d.prefix) && s[k] === 1)
+        .map(k => k.slice(d.prefix.length));
+    });
+    return t;
+  });
+  return ATLAS_TAGSETS;
+}
+
+function atlasShared(i, j) {
+  const A = atlasTagsets()[i], B = atlasTagsets()[j];
+  const by = {}; let total = 0;
+  ATLAS_DIMS.forEach(d => {
+    if (!ATLAS_STATE.dims.has(d.key)) return;
+    const sb = A[d.key].filter(x => B[d.key].includes(x));
+    if (sb.length) { by[d.key] = sb; total += sb.length; }
+  });
+  return { total, by };
+}
+
+function renderAtlas() {
+  const sel = document.getElementById('atlas-focus');
+  if (!sel) return;
+  if (!sel._init) {
+    sel.innerHTML = STUDIES.map((s, i) =>
+      `<option value="${i}">${escHtml(s.citation_short)} — ${escHtml((s.study_focus_short || s.study_focus || '').slice(0, 60))}</option>`).join('');
+    sel.addEventListener('change', () => { ATLAS_STATE.focus = parseInt(sel.value); drawAtlas(); });
+    // dim toggles
+    const dd = document.getElementById('atlas-dims');
+    dd.innerHTML = ATLAS_DIMS.map(d =>
+      `<label class="pill" style="cursor:pointer;user-select:none;"><input type="checkbox" data-dim="${d.key}" checked style="margin-right:0.3rem;">${d.label}</label>`).join('');
+    dd.querySelectorAll('input[data-dim]').forEach(cb => cb.addEventListener('change', () => {
+      if (cb.checked) ATLAS_STATE.dims.add(cb.dataset.dim); else ATLAS_STATE.dims.delete(cb.dataset.dim);
+      drawAtlas();
+    }));
+    sel._init = true;
+  }
+  if (ATLAS_STATE.focus == null) ATLAS_STATE.focus = 0;
+  sel.value = ATLAS_STATE.focus;
+  drawAtlas();
+}
+
+function drawAtlas() {
+  const fi = ATLAS_STATE.focus;
+  const focus = STUDIES[fi];
+  // rank all others by shared-tag count
+  const ranked = STUDIES.map((s, j) => j === fi ? null : { j, s, ...atlasShared(fi, j) })
+    .filter(x => x && x.total > 0).sort((a, b) => b.total - a.total);
+  const top = ranked.slice(0, 18);
+  const dimColor = Object.fromEntries(ATLAS_DIMS.map(d => [d.key, d.color]));
+  const dimLabel = Object.fromEntries(ATLAS_DIMS.map(d => [d.key, d.label]));
+
+  // ---- ego network SVG ----
+  const ego = document.getElementById('atlas-ego');
+  const W = Math.min(760, ego.clientWidth || 720), H = 340, cx = W / 2, cy = H / 2;
+  const maxShared = Math.max(1, ...top.map(t => t.total));
+  const ring = top.slice(0, 12);
+  let svg = `<svg width="100%" viewBox="0 0 ${W} ${H}" style="font-family:'Source Sans 3',sans-serif;">`;
+  ring.forEach((t, k) => {
+    const ang = (k / ring.length) * 2 * Math.PI - Math.PI / 2;
+    const r = 118 + (1 - t.total / maxShared) * 34;
+    const x = cx + r * Math.cos(ang), y = cy + r * Math.sin(ang);
+    svg += `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#c9c4bb" stroke-width="${(0.6 + 2.6 * t.total / maxShared).toFixed(2)}"/>`;
+    svg += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="#4E9A8F" opacity="0.85" style="cursor:pointer;" data-j="${t.j}"><title>${escHtml(t.s.citation_short)} · ${t.total} shared</title></circle>`;
+    const lab = t.s.citation_short.length > 18 ? t.s.citation_short.slice(0, 17) + '…' : t.s.citation_short;
+    const tx = cx + (r + 12) * Math.cos(ang), ty = cy + (r + 12) * Math.sin(ang);
+    const anchor = Math.cos(ang) < -0.3 ? 'end' : (Math.cos(ang) > 0.3 ? 'start' : 'middle');
+    svg += `<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" text-anchor="${anchor}" font-size="9.5" fill="#555" style="cursor:pointer;" data-j="${t.j}">${escHtml(lab)}</text>`;
+  });
+  svg += `<circle cx="${cx}" cy="${cy}" r="12" fill="#2E7E63"/>`;
+  svg += `<text x="${cx}" y="${cy - 16}" text-anchor="middle" font-size="11" font-weight="700" fill="#2E7E63">${escHtml(focus.citation_short)}</text>`;
+  svg += `</svg>`;
+  ego.innerHTML = svg + `<div style="font-size:0.8rem;color:var(--text-muted);">Edge thickness = number of shared tags. Click a node to re-center.</div>`;
+  ego.querySelectorAll('[data-j]').forEach(n => n.addEventListener('click', () => {
+    ATLAS_STATE.focus = parseInt(n.getAttribute('data-j'));
+    document.getElementById('atlas-focus').value = ATLAS_STATE.focus; drawAtlas();
+  }));
+
+  // ---- ranked list with shared-tag chips ----
+  const listEl = document.getElementById('atlas-list');
+  if (!top.length) { listEl.innerHTML = '<div class="sandbox-empty">No studies share the selected tag types.</div>'; return; }
+  listEl.innerHTML = `<div style="font-size:0.9rem;font-weight:600;margin-bottom:0.4rem;">Most related to ${escHtml(focus.citation_short)} (${ranked.length} share ≥1 tag)</div>` +
+    top.map(t => {
+      const chips = Object.keys(t.by).map(dim =>
+        t.by[dim].map(tag =>
+          `<span style="display:inline-block;font-size:0.68rem;background:${dimColor[dim]};color:white;border-radius:8px;padding:0 0.4rem;margin:1px 0.2rem 1px 0;" title="${dimLabel[dim]}">${escHtml(tag.replace(/_/g, ' '))}</span>`).join('')
+      ).join('');
+      return `<div style="padding:0.4rem 0.2rem;border-bottom:1px solid #eee;font-size:0.9rem;">
+          <span style="display:inline-block;min-width:1.6rem;font-weight:700;color:var(--deep-green);">${t.total}</span>
+          <a href="#" onclick="event.preventDefault();openPaperModal('${t.s.paper_id}')" style="color:var(--deep-green);font-weight:600;">${escHtml(t.s.citation_short)}</a>
+          <a href="#" onclick="event.preventDefault();atlasRecenter(${t.j})" style="color:var(--text-muted);font-size:0.78rem;margin-left:0.3rem;">[center]</a>
+          <span style="color:var(--text-muted);"> — ${escHtml((t.s.study_focus_short || t.s.study_focus || '').slice(0, 70))}</span>
+          <div style="margin-top:0.2rem;">${chips}</div>
+        </div>`;
+    }).join('');
+}
+function atlasRecenter(j) { ATLAS_STATE.focus = j; const sel = document.getElementById('atlas-focus'); if (sel) sel.value = j; drawAtlas(); }
 
 // ---------------- Init the sandbox tab ----------------
 function initSandbox() {
