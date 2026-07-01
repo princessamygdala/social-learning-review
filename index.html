@@ -1221,17 +1221,20 @@ of that series.
 </p>
 
 <div class="filter-bar" style="display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center;">
-  <label style="font-size: 0.9rem; color: var(--text-muted);">Show:</label>
-  <span class="pill hist-show active" data-mode="topic">Topics</span>
-  <span class="pill hist-show" data-mode="model">Model families</span>
-  <span class="pill hist-show" data-mode="method">Methods</span>
-  <span class="pill hist-show" data-mode="region">Brain regions</span>
-  <span class="pill hist-show" data-mode="source">Source types</span>
-  <span class="pill hist-show" data-mode="target">Target types</span>
-  <span class="pill hist-show" data-mode="field">Fields of study</span>
-  <span class="pill hist-show" data-mode="population">Populations</span>
-  <span class="pill hist-show" data-mode="limitation">Limitations</span>
-  <span class="pill hist-show" data-mode="cells" style="font-style:italic;">Framework cells</span>
+  <label style="font-size: 0.9rem; color: var(--text-muted);">Show:
+    <select id="hist-show-select" style="font-family: inherit; font-size: 0.9rem; padding: 0.35rem 0.6rem; border-radius: var(--radius); border: 1px solid var(--border); background: white; color: var(--text);">
+      <option value="topic" selected>Topics</option>
+      <option value="model">Model families</option>
+      <option value="method">Methods</option>
+      <option value="region">Brain regions</option>
+      <option value="source">Source types</option>
+      <option value="target">Target types</option>
+      <option value="field">Fields of study</option>
+      <option value="population">Populations</option>
+      <option value="limitation">Limitations</option>
+      <option value="cells">Framework cells</option>
+    </select>
+  </label>
 </div>
 
 <div class="filter-bar" style="display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; margin-top: 0.4rem;">
@@ -1274,21 +1277,25 @@ Pick a view to slice the study space by task paradigm or framework cell against
 topics, source types, and target types. Cells = N studies in that
 intersection. Hover for raw counts; click to filter the Papers tab.
 </p>
-<div class="filter-bar" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-  <span class="pill tasks-view active" data-view="paradigm_topic">Paradigm × topic</span>
-  <span class="pill tasks-view" data-view="paradigm_source">Paradigm × source type</span>
-  <span class="pill tasks-view" data-view="paradigm_target">Paradigm × target type</span>
-  <span class="pill tasks-view" data-view="sourcetarget_topic">Source → target × topic</span>
-  <span class="pill tasks-view" data-view="paradigm_players">Paradigm × n_players</span>
-  <span class="pill tasks-view" data-view="context_topic">Context × topic</span>
-  <span class="pill tasks-view" data-view="partner_topic">Partner × topic</span>
-  <span class="pill tasks-view" data-view="outcome_topic">Outcome × topic</span>
-  <span class="pill tasks-view" data-view="paradigm_domain">Paradigm × domain</span>
-  <span class="pill tasks-view" data-view="paradigm_subtopic">Paradigm × subtopic</span>
-  <span class="pill tasks-view" data-view="paradigm_population">Paradigm × population</span>
-  <span class="pill tasks-view" data-view="paradigm_modality">Paradigm × modality</span>
-  <span class="pill tasks-view" data-view="paradigm_model">Paradigm × model</span>
-  <span class="pill tasks-view" data-view="paradigm_region">Paradigm × brain region</span>
+<div class="filter-bar" style="display: flex; gap: 0.7rem; flex-wrap: wrap; align-items:center;">
+  <label style="font-size: 0.9rem; color: var(--text-muted);">View:
+    <select id="tasks-view-select" style="font-family: inherit; font-size: 0.9rem; padding: 0.35rem 0.6rem; border-radius: var(--radius); border: 1px solid var(--border); background: white; color: var(--text);">
+      <option value="paradigm_topic" selected>Paradigm × topic</option>
+      <option value="paradigm_source">Paradigm × source type</option>
+      <option value="paradigm_target">Paradigm × target type</option>
+      <option value="sourcetarget_topic">Source → target × topic</option>
+      <option value="paradigm_players">Paradigm × n_players</option>
+      <option value="context_topic">Context × topic</option>
+      <option value="partner_topic">Partner × topic</option>
+      <option value="outcome_topic">Outcome × topic</option>
+      <option value="paradigm_domain">Paradigm × domain</option>
+      <option value="paradigm_subtopic">Paradigm × subtopic</option>
+      <option value="paradigm_population">Paradigm × population</option>
+      <option value="paradigm_modality">Paradigm × modality</option>
+      <option value="paradigm_model">Paradigm × model</option>
+      <option value="paradigm_region">Paradigm × brain region</option>
+    </select>
+  </label>
 </div>
 <div id="tasks-wrap" style="background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem; position: relative; overflow: auto;">
   <div id="tasks-heatmap"></div>
@@ -3774,6 +3781,10 @@ function renderTasksHeatmap() {
 }
 
 // Wire view-toggle pills
+(function () {
+  const tv = document.getElementById('tasks-view-select');
+  if (tv) tv.addEventListener('change', () => { TASKS_VIEW = tv.value; renderTasksHeatmap(); });
+})();
 document.querySelectorAll('.pill.tasks-view').forEach(p => {
   p.addEventListener('click', () => {
     document.querySelectorAll('.pill.tasks-view').forEach(q => q.classList.remove('active'));
@@ -4642,20 +4653,16 @@ function renderFrameworkCells() {
 
 // Wire control pills
 function initHistoryControls() {
-  document.querySelectorAll('.pill.hist-show').forEach(p => {
-    p.addEventListener('click', () => {
-      document.querySelectorAll('.pill.hist-show').forEach(q => q.classList.remove('active'));
-      p.classList.add('active');
-      HISTORY_STATE.mode = p.dataset.mode;
-      HISTORY_STATE.hidden.clear();
-      // Disable display/smooth/topn pills when in cells mode
-      const inCells = HISTORY_STATE.mode === 'cells';
-      document.querySelectorAll('.pill.hist-disp, .pill.hist-smooth, .pill.hist-topn').forEach(q => {
-        if (inCells) q.setAttribute('disabled', '');
-        else q.removeAttribute('disabled');
-      });
-      renderHistory();
+  const histShowSel = document.getElementById('hist-show-select');
+  if (histShowSel) histShowSel.addEventListener('change', () => {
+    HISTORY_STATE.mode = histShowSel.value;
+    HISTORY_STATE.hidden.clear();
+    const inCells = HISTORY_STATE.mode === 'cells';
+    document.querySelectorAll('.pill.hist-disp, .pill.hist-smooth, .pill.hist-topn').forEach(q => {
+      if (inCells) q.setAttribute('disabled', '');
+      else q.removeAttribute('disabled');
     });
+    renderHistory();
   });
   document.querySelectorAll('.pill.hist-disp').forEach(p => {
     p.addEventListener('click', () => {
@@ -5870,7 +5877,8 @@ function atlasColorKey(i, dim) {
   if (dim === 'design') return STUDIES[i].NEW_design || 'unclear';
   if (dim === 'any') return (t.topic[0] || 'other');
   const arr = t[dim];
-  return arr && arr.length ? arr[0] : 'unspecified';
+  if (arr && arr.length) return arr[0];
+  return dim === 'model' ? 'no computational model' : 'unspecified';
 }
 function initAtlasGlobal() {
   const ls = document.getElementById('atlas-link'), cs = document.getElementById('atlas-color');
