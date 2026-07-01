@@ -872,6 +872,12 @@ papers. It is a quick way to see what the shared vocabulary already describes.
 </div>
 <div id="fexp-output"></div>
 
+<p class="prose" style="color: var(--text-muted); margin-top: 2rem;">
+<em>Open questions and implementation-level gaps now live in the
+<a href="#" onclick="showPage('maps');setTimeout(()=>switchMapsTab('frontier'),60);return false;">Research frontier</a>
+tab, alongside the gap map, replicated findings, and live debates.</em>
+</p>
+<div id="open-questions-block">
 <h3 id="open-questions" style="margin-top: 2.2rem;">Open questions: what has not been studied yet</h3>
 <p>
 The explorer above shows what the shared vocabulary already describes; this
@@ -955,6 +961,7 @@ contribute to a structured cross-study synthesis.
     </div>
   </div>
 </div>
+</div><!--/open-questions-block-->
 
 <h3 style="margin-top: 2.4rem;">Read more about social learning</h3>
 <p>A hand-picked starter list of foundational and recent papers on computational models of social learning, grouped by theme. This is not a comprehensive bibliography &mdash; see the <a href="#" data-page="papers">Papers</a> tab for the full study space.</p>
@@ -5773,6 +5780,16 @@ function renderDebates() {
 }
 
 function renderFrontier() {
+  // relocate the Open-questions + implementation-gaps block from the framework
+  // tab into this tab (once), then (re)render its panels
+  const oq = document.getElementById('open-questions-block');
+  const fp = document.getElementById('maps-pane-frontier');
+  if (oq && fp && oq.parentElement !== fp) {
+    const hdr = document.createElement('hr'); hdr.style.cssText = 'margin:2.2rem 0 1.2rem;border:none;border-top:1px solid var(--border);';
+    fp.appendChild(hdr); fp.appendChild(oq);
+  }
+  try { if (typeof BRAIN_REGIONS === 'undefined' || !BRAIN_REGIONS) { if (typeof decodeB64Json === 'function') BRAIN_REGIONS = decodeB64Json(BRAIN_REGIONS_B64); } } catch (e) {}
+  try { renderRegionGaps(); renderSocialParamGaps(); renderContentHeatmap(); renderTypeContentHeatmaps(); } catch (e) {}
   renderConsensus();
   renderReplicatedFindings();
   renderDebates();
@@ -6638,6 +6655,15 @@ try {
   initHeatmap();
   try { renderContentHeatmap(); } catch (e) {}
   try { renderTypeContentHeatmaps(); } catch (e) {}
+  // relocate Open questions + implementation gaps into the Research frontier tab
+  try {
+    const oq = document.getElementById('open-questions-block');
+    const fp = document.getElementById('maps-pane-frontier');
+    if (oq && fp && oq.parentElement !== fp) {
+      const hr = document.createElement('hr'); hr.style.cssText = 'margin:2.2rem 0 1.2rem;border:none;border-top:1px solid var(--border);';
+      fp.appendChild(hr); fp.appendChild(oq);
+    }
+  } catch (e) {}
   renderStudies();
   const dt = (performance.now() - t0).toFixed(0);
   diag(`Loaded ${STUDIES.length} studies in ${dt} ms (v2 / base64 inline)`, false);
