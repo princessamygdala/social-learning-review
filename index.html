@@ -915,10 +915,10 @@ Click a cell to filter the studies.
 
 <h4 style="margin-top: 2rem;">Type × content: what each type carries</h4>
 <p>
-The vocabulary nests content inside type. These two matrices unpack that: for each
-<strong>type</strong> (self / other / group / social structure / world), what kind
-of <strong>content</strong> is actually learned from it (source) or about it
-(target)? Click a cell to filter the studies.
+The vocabulary nests content inside type. For each <strong>type</strong> (self /
+other / group / social structure / world), each bar shows what kind of
+<strong>content</strong> is actually learned from it (source) or about it (target),
+as a proportion. Click a segment to filter the studies.
 </p>
 <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:1rem;">
   <div class="heatmap-wrap">
@@ -963,8 +963,10 @@ contribute to a structured cross-study synthesis.
 </div>
 </div><!--/open-questions-block-->
 
-<h3 style="margin-top: 2.4rem;">Read more about social learning</h3>
-<p>A hand-picked starter list of foundational and recent papers on computational models of social learning, grouped by theme. This is not a comprehensive bibliography &mdash; see the <a href="#" data-page="papers">Papers</a> tab for the full study space.</p>
+<div id="readings-wrap" style="display:flex;flex-direction:column;">
+<div id="rd-learn" style="order:2;">
+<h3 style="margin-top: 2.4rem;">Learn more about social learning</h3>
+<p>A hand-picked starter list of key papers on computational models of social learning, split into important reviews / syntheses and seminal empirical &amp; methods papers. This is not a comprehensive bibliography &mdash; see the <a href="#" data-page="papers">Papers</a> tab for the full study space.</p>
 <div id="framework-readings-list" style="margin-top: 0.8rem;"></div>
 
 <h4 style="margin-top: 1.4rem; color: var(--teal-dark);">Foundational reading</h4>
@@ -976,8 +978,9 @@ contribute to a structured cross-study synthesis.
     — the canonical statement of the three-level analysis framework
     that organizes this review.</li>
 </ul>
-
-<h3 style="margin-top: 2.4rem;">Getting started with computational modeling of social learning</h3>
+</div><!--/rd-learn-->
+<div id="rd-resources" style="order:1;">
+<h3 style="margin-top: 0;">Resources: getting started with computational modeling of social learning</h3>
 <p>New to this area? These are the resources we most often recommend for
 getting up to speed, starting with this review itself.</p>
 
@@ -1038,6 +1041,8 @@ getting up to speed, starting with this review itself.</p>
 Suggestions for resources to add? Email
 <a href="mailto:compsocialreview@gmail.com">compsocialreview@gmail.com</a>.
 </p>
+</div><!--/rd-resources-->
+</div><!--/readings-wrap-->
 
 </div>
 </section>
@@ -3103,35 +3108,34 @@ function renderTypeContentHeatmap(containerId, role) {
       if (i >= 0 && j >= 0) M[i][j]++;
     }));
   });
-  const max = Math.max(1, ...M.flat());
-  let html = '<table class="heatmap-table"><tr><th class="corner"></th>';
-  html += `<th colspan="${CONTENT_VOCAB.length}" style="background:transparent;">content</th></tr>`;
-  html += '<tr><th class="corner">type</th>';
-  CONTENT_VOCAB.forEach(l => html += `<th>${l}</th>`);
-  html += '</tr>';
-  M.forEach((row, i) => {
-    html += `<tr><th>${TYPE_VOCAB[i]}</th>`;
-    row.forEach((v, j) => {
-      if (v === 0) {
-        html += `<td class="heatmap-cell empty" data-ty="${TYPE_VOCAB[i]}" data-co="${CONTENT_VOCAB[j]}" title="No studies yet">0</td>`;
-      } else {
-        const t = v / max;
-        const r = Math.round(228 - t * (228 - 42));
-        const g = Math.round(242 - t * (242 - 110));
-        const b = Math.round(242 - t * (242 - 112));
-        const tx = t > 0.55 ? '#fff' : '#1a3838';
-        html += `<td class="heatmap-cell" data-ty="${TYPE_VOCAB[i]}" data-co="${CONTENT_VOCAB[j]}" style="background:rgb(${r},${g},${b});color:${tx};" title="Click to filter: ${role} ${TYPE_VOCAB[i]} / ${CONTENT_VOCAB[j]}">${v}</td>`;
-      }
+  // Horizontal stacked bars: one per type, segments = content proportions.
+  const CONTENT_COLORS = { 'stimulus': '#8a8a3a', 'mental state': '#7F77DD', 'world state': '#3a7e8a', 'state': '#9B9590', 'action/policy': '#B07A2A', 'outcome': '#2E7E63' };
+  const rows = TYPE_VOCAB.map((ty, i) => ({ ty, counts: M[i], total: M[i].reduce((a, b) => a + b, 0) }))
+    .filter(r => r.total > 0).sort((a, b) => b.total - a.total);
+  let html = '<div style="display:flex;flex-direction:column;gap:0.25rem;">';
+  rows.forEach(r => {
+    let segs = '';
+    CONTENT_VOCAB.forEach((c, j) => {
+      const v = r.counts[j];
+      if (!v) return;
+      const pct = (100 * v / r.total).toFixed(1);
+      segs += `<span class="tc-seg" data-ty="${escHtml(r.ty)}" data-co="${escHtml(c)}" title="${escHtml(role + ': ' + r.ty + ' → ' + c)}: ${v} (click to filter)" style="width:${pct}%;background:${CONTENT_COLORS[c] || '#888'};cursor:pointer;"></span>`;
     });
-    html += '</tr>';
+    html += `<div style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;">
+      <span style="width:104px;text-align:right;color:var(--text);">${escHtml(r.ty)}</span>
+      <span style="flex:1;display:flex;height:18px;border-radius:3px;overflow:hidden;background:#f0ece4;">${segs}</span>
+      <span style="width:30px;color:var(--text-muted);">${r.total}</span>
+    </div>`;
   });
-  html += '</table>';
+  html += '</div>';
+  html += '<div style="margin-top:0.5rem;font-size:0.78rem;color:var(--text-muted);">' +
+    CONTENT_VOCAB.filter(c => M.some(row => row[CONTENT_VOCAB.indexOf(c)] > 0)).map(c =>
+      `<span style="margin-right:0.8rem;"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${CONTENT_COLORS[c] || '#888'};"></span> ${escHtml(c)}</span>`).join('') + '</div>';
   el.innerHTML = html;
   const typeSet = role === 'source' ? 'source' : 'target';
   const contentSet = role === 'source' ? 'source_content' : 'target_content';
-  el.querySelectorAll('.heatmap-cell[data-ty]').forEach(td => {
+  el.querySelectorAll('.tc-seg[data-ty]').forEach(td => {
     td.addEventListener('click', () => {
-      if (parseInt(td.textContent) === 0) return;
       ['source','target','model','method','flags','field','players','partner','outcome','task_paradigm','tax_topic','tax_domain','tax_pop','tax_popclass','tax_mod','source_content','target_content'].forEach(k => FILTER_STATE[k] && FILTER_STATE[k].clear && FILTER_STATE[k].clear());
       FILTER_STATE.cellSource = null; FILTER_STATE.cellTarget = null;
       FILTER_STATE[typeSet].add(td.dataset.ty);
@@ -6225,25 +6229,36 @@ function renderReadingsList() {
 }
 
 // Render the same curated readings inline inside the "What is social learning?" tab.
+const _READING_REVIEW_RE = /review|trends in|annual review|current opinion|perspective|opinion|psychological bulletin|wires|synthesis|meta-?analysis|nature reviews|ten simple rules|what.s social|taxonomy|primer|principles of/i;
+function _readingIsReview(e) {
+  return _READING_REVIEW_RE.test([e.title, e.venue, e.why].map(x => x || '').join(' '));
+}
 function renderFrameworkReadings() {
   const el = document.getElementById('framework-readings-list');
   if (!el || el.dataset.rendered === '1') return;
-  const data = loadReadings() || {groups: []};
-  const groups = data.groups || [];
-  const html = groups.map(g => {
-    const entries = (g.entries || []);
-    if (!entries.length) return '';
-    const blurb = g.blurb
-      ? `<p class="prose" style="font-size: 0.95rem; color: var(--text-muted); margin: 0.2rem 0 0.7rem;">${escHtml(g.blurb)}</p>`
-      : '';
-    return `<div style="margin: 1.2rem 0 1.6rem;">
-        <h4 style="margin: 0 0 0.3rem; color: var(--teal-dark);">${escHtml(g.name || '')}</h4>
-        ${blurb}
-        ${entries.map(renderReadingEntry).join('')}
-      </div>`;
-  }).join('');
-  el.innerHTML = renderAcrossReadings(data.across_readings) + html;
+  const data = loadReadings() || { groups: [] };
+  // flatten entries, tag each with its curated theme, split reviews vs empirical
+  const all = [];
+  (data.groups || []).forEach(g => (g.entries || []).forEach(e => all.push(Object.assign({ _theme: g.name || '' }, e))));
+  const yr = e => parseInt(String(e.year), 10) || 0;
+  const reviews = all.filter(_readingIsReview).sort((a, b) => yr(b) - yr(a));
+  const empirical = all.filter(e => !_readingIsReview(e)).sort((a, b) => yr(b) - yr(a));
+  const section = (title, sub, list) => !list.length ? '' : `<div style="margin: 1.2rem 0 1.6rem;">
+      <h4 style="margin: 0 0 0.2rem; color: var(--teal-dark);">${escHtml(title)} <span style="color:var(--text-muted);font-weight:400;">· ${list.length}</span></h4>
+      <p class="prose" style="font-size:0.9rem;color:var(--text-muted);margin:0.1rem 0 0.7rem;">${escHtml(sub)}</p>
+      ${list.map(renderReadingEntryTagged).join('')}
+    </div>`;
+  el.innerHTML =
+    section('Key reviews & syntheses', 'Reviews, perspectives, and meta-analyses that frame the field.', reviews) +
+    section('Seminal empirical & methods papers', 'Landmark studies and methods primers the models build on.', empirical);
   el.dataset.rendered = '1';
+}
+function renderReadingEntryTagged(e) {
+  const card = renderReadingEntry(e);
+  if (!e._theme) return card;
+  const chip = ` <span style="display:inline-block;font-size:0.68rem;background:#e7e2d8;color:var(--text);border-radius:8px;padding:0 0.45rem;vertical-align:middle;">${escHtml(e._theme)}</span>`;
+  // append the theme chip right after the title citation span
+  return card.replace(/(<span class="citation"[^>]*>[\s\S]*?<\/span>)/, '$1' + chip);
 }
 
 function initReadings() {
