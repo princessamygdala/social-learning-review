@@ -1357,6 +1357,17 @@ economic / game-theoretic, sequential-sampling, memory-based, or descriptive. Ca
 are grouped by super-family and show how many studies use each.</p>
 <div id="models-fam-list"></div>
 
+<h3 style="margin-top: 2rem;">How the families relate</h3>
+<p class="prose" style="color: var(--text-muted);">
+The families look different but share a few computational principles. The clearest
+example: <strong>Rescorla-Wagner and Bayesian models both update an estimate in
+proportion to a prediction error</strong>. What differs is what scales that update:
+RW uses a fixed learning rate, while Bayesian / Hierarchical Gaussian Filter models
+scale it by <em>precision</em> (how certain the current belief is). Click a
+principle to see which families rest on it.
+</p>
+<div id="model-principles"></div>
+
 <h3 style="margin-top: 2rem;">Model explorer</h3>
 <p class="prose" style="color: var(--text-muted);">Pick a family to see what it is, a
 canonical update rule, the parameter types it tends to fit, and example studies.</p>
@@ -4873,9 +4884,56 @@ function familyCounts() {
 
 function renderModelsPane() {
   renderModelFamilyCards();
+  renderModelPrinciples();
   initModelExplorer();
   initParamCats();
   renderDesignPanel();
+}
+
+// Shared computational principles across model families.
+const MODEL_PRINCIPLES = [
+  { key: 'error', name: 'Error-driven updating', desc: 'an estimate is revised in proportion to a prediction error (δ)',
+    fams: ['Rescorla-Wagner', 'Q-learning', 'MB/MF hybrid', 'Multi-agent RL', 'HGF', 'Connectionist (SUSTAIN/ALCOVE)', 'Economic strategy (EWA)'] },
+  { key: 'precision', name: 'Precision / uncertainty weighting', desc: 'the size of each update depends on how certain the current belief is',
+    fams: ['HGF', 'Bayesian', 'State-space / HMM', 'Gaussian process'] },
+  { key: 'belief', name: 'Belief over a hidden state', desc: 'a posterior belief is inferred about something unobserved (a trait, intention, volatility)',
+    fams: ['Bayesian', 'HGF', 'State-space / HMM', 'Multi-agent RL'] },
+  { key: 'value', name: 'Value / utility representation', desc: 'options carry a scalar value that drives choice',
+    fams: ['Rescorla-Wagner', 'Q-learning', 'MB/MF hybrid', 'Utility / EV', 'Multi-agent RL', 'Economic strategy (EWA)'] },
+  { key: 'planning', name: 'Model-based / planning', desc: 'a model of the world (transitions/outcomes) is used to evaluate options',
+    fams: ['MB/MF hybrid', 'State-space / HMM', 'Bayesian'] },
+  { key: 'strategic', name: 'Strategic / recursive reasoning', desc: 'reasoning about what other adapting agents will do',
+    fams: ['Multi-agent RL', 'Economic strategy (EWA)', 'Heuristic', 'Agent-based / evolutionary', 'Opinion pooling'] },
+  { key: 'combine', name: 'Combining own and others’ estimates', desc: 'one’s own estimate is blended with others’, weighted by influence',
+    fams: ['Opinion pooling', 'Economic strategy (EWA)', 'Multi-agent RL'] },
+  { key: 'generalize', name: 'Similarity / generalization', desc: 'learning spreads across similar stimuli or people',
+    fams: ['Gaussian process', 'Connectionist (SUSTAIN/ALCOVE)', 'Cognitive architecture (ACT-R/IBL)'] },
+  { key: 'sampling', name: 'Evidence accumulation', desc: 'evidence is accumulated over time to a decision bound',
+    fams: ['Drift-diffusion'] },
+  { key: 'descriptive', name: 'Descriptive (no generative rule)', desc: 'summarizes behavior without a generative learning rule',
+    fams: ['Signal detection', 'Descriptive / regression', 'No formal model'] },
+];
+let MODEL_PRINCIPLE_SEL = null;
+function renderModelPrinciples() {
+  const el = document.getElementById('model-principles');
+  if (!el) return;
+  const counts = familyCounts();
+  const nOf = fam => counts.get(fam) || 0;
+  const chips = fams => fams.filter(f => nOf(f) > 0).sort((a, b) => nOf(b) - nOf(a))
+    .map(f => `<span style="display:inline-block;font-size:0.76rem;background:${MODEL_PRINCIPLE_SEL && MODEL_PRINCIPLES.find(p=>p.key===MODEL_PRINCIPLE_SEL).fams.includes(f) ? 'var(--deep-green)' : '#e7e2d8'};color:${MODEL_PRINCIPLE_SEL && MODEL_PRINCIPLES.find(p=>p.key===MODEL_PRINCIPLE_SEL).fams.includes(f) ? 'white' : 'var(--text)'};border-radius:10px;padding:0.05rem 0.5rem;margin:2px 0.25rem 2px 0;">${escHtml(f)} <span style="opacity:0.7;">${nOf(f)}</span></span>`).join('');
+  el.innerHTML = MODEL_PRINCIPLES.map(p => {
+    const sel = MODEL_PRINCIPLE_SEL === p.key;
+    const nStudies = new Set();
+    // count studies whose model_family sits under this principle
+    STUDIES.forEach(s => { if (p.fams.includes((s.model_family || '').trim())) nStudies.add(s.study_id); });
+    return `<div class="figure-wrap" style="text-align:left;padding:0.6rem 0.9rem;margin:0.4rem 0;cursor:pointer;border:${sel ? '2px solid var(--deep-green)' : '1px solid var(--border)'};" onclick="MODEL_PRINCIPLE_SEL='${MODEL_PRINCIPLE_SEL === p.key ? '' : p.key}';renderModelPrinciples();">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <strong>${escHtml(p.name)}</strong><span style="color:var(--text-muted);font-size:0.82rem;">${nStudies.size} studies</span>
+        </div>
+        <div style="font-size:0.86rem;color:var(--text-muted);margin:0.15rem 0 0.35rem;">${escHtml(p.desc)}</div>
+        <div>${chips(p.fams)}</div>
+      </div>`;
+  }).join('');
 }
 
 const MODELING_ROLE_DESC = {
