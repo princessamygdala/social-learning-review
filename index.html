@@ -440,7 +440,6 @@ footer { padding: 2rem; text-align: center; color: var(--text-muted); font-size:
       <a href="#" class="nav-sub" data-mtab="tasks"   style="padding: 0.3rem 0.4rem; color: white; border-bottom: 0;">Task paradigms</a>
       <a href="#" class="nav-sub" data-mtab="models"  style="padding: 0.3rem 0.4rem; color: white; border-bottom: 0;">Models &amp; parameters</a>
       <a href="#" class="nav-sub" data-mtab="frontier" style="padding: 0.3rem 0.4rem; color: white; border-bottom: 0;">Research frontier</a>
-      <a href="#" class="nav-sub" data-mtab="atlas" style="padding: 0.3rem 0.4rem; color: white; border-bottom: 0;">Study atlas</a>
       <a href="#" class="nav-sub" data-mtab="sandbox" style="padding: 0.3rem 0.4rem; color: white; border-bottom: 0;">Simulation Sandbox</a>
     </span>
   </span>
@@ -1148,7 +1147,6 @@ Several interactive ways to look at the study space. Pick a sub-tab below.
   <span class="pill maps-tab" data-mtab="tasks">Task paradigms</span>
   <span class="pill maps-tab" data-mtab="models">Models &amp; parameters</span>
   <span class="pill maps-tab" data-mtab="frontier">Research frontier</span>
-  <span class="pill maps-tab" data-mtab="atlas">Study atlas</span>
   <span class="pill maps-tab" data-mtab="sandbox">Simulation Sandbox</span>
 </div>
 <div class="maps-pane" id="maps-pane-network">
@@ -1575,13 +1573,14 @@ above), then click any question to open the paper that raised it.
 </div><!--/maps-pane-frontier-->
 
 <div class="maps-pane" id="maps-pane-atlas" style="display:none;">
-<h2 style="margin-top: 0;">Study atlas</h2>
+<hr style="margin:2.4rem 0 1.4rem;border:none;border-top:1px solid var(--border);">
+<h2 style="margin-top: 0;">How studies relate to each other</h2>
 <p class="prose" style="color: var(--text-muted);">
-How any one study relates to the rest of the field. Pick a study; the atlas ranks
-every other study by how many tags they share, and shows exactly which tags overlap
-(topic, population, learning modality, model family, domain). Studies can carry
-several tags per dimension, so a cooperation-and-trust study links to both. Click a
-neighbour to re-center the atlas on it, or its citation to open the paper.
+The network above clusters studies by one attribute; this section instead links them
+by <em>shared tags</em>. Pick a study to rank every other by how many tags they share
+(topic, population, learning modality, model family, domain), or use the whole-field
+network below. Studies can carry several tags per dimension, so a cooperation-and-trust
+study links to both. Click a neighbour to re-center, or a citation to open the paper.
 </p>
 <div class="filter-bar" style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; margin:0.4rem 0 0.6rem;">
   <label>Focus study:
@@ -2186,7 +2185,7 @@ const SITE_DESTINATIONS = [
   { label: 'Task paradigms', sub: 'tasks used across studies', kw: ['task', 'paradigm', 'design'], run: () => { showPage('maps'); switchMapsTab('tasks'); } },
   { label: 'Models & parameters', sub: 'model families, parameters, interventions', kw: ['model', 'parameter', 'family', 'rl', 'bayesian', 'intervention', 'learning rate', 'self-report'], run: () => { showPage('maps'); switchMapsTab('models'); } },
   { label: 'Research frontier', sub: 'gaps, open questions, replicated findings', kw: ['frontier', 'gap', 'gaps', 'future', 'open question', 'consensus', 'finding', 'replicated'], run: () => { showPage('maps'); switchMapsTab('frontier'); } },
-  { label: 'Study atlas', sub: 'how studies relate to each other', kw: ['atlas', 'related', 'similar', 'shared tags', 'connections'], run: () => { showPage('maps'); switchMapsTab('atlas'); } },
+  { label: 'How studies relate (Study network)', sub: 'shared-tag relationships between studies', kw: ['atlas', 'related', 'similar', 'shared tags', 'connections', 'relate'], run: () => { showPage('maps'); switchMapsTab('network'); setTimeout(() => { const a = document.getElementById('maps-pane-atlas'); if (a) a.scrollIntoView({ behavior: 'smooth' }); }, 200); } },
   { label: 'Simulation sandbox', sub: 'interactive widgets', kw: ['sandbox', 'simulation', 'pooling', 'widget'], run: () => { showPage('maps'); switchMapsTab('sandbox'); } },
   { label: 'What is social learning?', sub: 'framework and readings', kw: ['framework', 'learn', 'readings', 'intro', 'definition'], run: () => { showPage('framework'); } },
   { label: 'Submit a paper or correction', sub: '', kw: ['submit', 'correction', 'add', 'error', 'contribute'], run: () => { showPage('submit'); } },
@@ -3838,14 +3837,15 @@ document.querySelectorAll('.pill.tasks-view').forEach(p => {
 function switchMapsTab(name) {
   document.querySelectorAll('.maps-tab').forEach(t => t.classList.toggle('active', t.dataset.mtab === name));
   document.querySelectorAll('.maps-pane').forEach(p => {
-    p.style.display = (p.id === 'maps-pane-' + name) ? '' : 'none';
+    // the Study-atlas pane now lives inside the Study-network tab
+    const show = (p.id === 'maps-pane-' + name) || (name === 'network' && p.id === 'maps-pane-atlas');
+    p.style.display = show ? '' : 'none';
   });
   // Trigger resize-sensitive renders
-  if (name === 'network') setTimeout(() => { initNetwork(); netRender(); }, 50);
+  if (name === 'network') setTimeout(() => { initNetwork(); netRender(); renderAtlas(); }, 50);
   if (name === 'tasks') setTimeout(() => renderTasksHeatmap(), 50);
   if (name === 'models') setTimeout(() => renderModelsPane(), 50);
   if (name === 'frontier') setTimeout(() => renderFrontier(), 50);
-  if (name === 'atlas') setTimeout(() => renderAtlas(), 50);
   if (name === 'sandbox') setTimeout(() => initSandbox(), 50);
   if (name === 'readings') setTimeout(() => initReadings(), 50);
   if (name === 'time') setTimeout(() => {
