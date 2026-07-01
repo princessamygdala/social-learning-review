@@ -1475,7 +1475,16 @@ statements about what should be done next. Each is tagged with a theme and marke
 concrete research question). These are the field's self-reported gaps.
 </p>
 
-<h3>Frontier map</h3>
+<h3 style="margin-top:0.4rem;">What recurs across studies</h3>
+<p class="prose" style="color: var(--text-muted);">
+The flip side of the gaps: patterns that show up in many studies. These are
+structural regularities counted from the tags (which regions, parameters, and
+populations recur), each reported by 10 or more studies. (Substantive
+behavioral findings are being synthesized separately.)
+</p>
+<div id="frontier-consensus"></div>
+
+<h3 style="margin-top:1.8rem;">Frontier map</h3>
 <p class="prose" style="color: var(--text-muted);">
 Each bubble is a theme; its area is the number of papers calling for it. Click a
 bubble to read the specific questions behind it in the list below (click again to
@@ -5429,7 +5438,52 @@ function frontierThemeCounts() {
   return out;
 }
 
+function renderConsensus() {
+  const el = document.getElementById('frontier-consensus');
+  if (!el) return;
+  if (!BRAIN_REGIONS) { try { BRAIN_REGIONS = decodeB64Json(BRAIN_REGIONS_B64); } catch (e) { BRAIN_REGIONS = { regions: [] }; } }
+  const uniq = new Map(); STUDIES.forEach(s => { if (!uniq.has(s.paper_id)) uniq.set(s.paper_id, s); });
+  const P = [...uniq.values()];
+  const nParam = col => STUDIES.filter(s => s[col] === 1).length; // study-level
+  const nP = f => P.filter(f).length;
+  // neural: aggregate canonical regions into networks
+  const netAgg = {};
+  (BRAIN_REGIONS.regions || []).forEach(r => { const net = regionNetwork(r.name); (netAgg[net.name] = netAgg[net.name] || { regs: [], color: net.color }).regs.push([r.name, r.papers.length]); });
+  const neuralRows = Object.entries(netAgg).map(([name, o]) => {
+    const top = o.regs.sort((a, b) => b[1] - a[1]).slice(0, 4);
+    const max = Math.max(...o.regs.map(x => x[1]));
+    return max >= 10 ? `<div style="margin:0.2rem 0;"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${o.color};"></span> <strong>${escHtml(name)}</strong> — ${top.map(t => escHtml(t[0]) + ' <span style="color:var(--text-muted);">' + t[1] + '</span>').join(', ')}</div>` : '';
+  }).filter(Boolean).join('');
+  // computational findings
+  const comp = [
+    ['a learning-rate parameter (α)', nParam('tax_param_learning_rate')],
+    ['a social weighting parameter (own vs others’ information)', nParam('tax_param_social_weight')],
+    ['a prediction-error signal in a social context', STUDIES.filter(s => s.tax_param_PE_signal === 1 && (s.source_type_social || s.target_type_social)).length],
+    ['valence-asymmetric learning (different rates for good vs bad news)', nParam('tax_param_valence_asymmetry')],
+    ['a choice-temperature parameter (β)', nParam('tax_param_temperature')],
+    ['an extra social value / bonus term', nParam('tax_param_social_bonus')],
+    ['precision / uncertainty weighting', nParam('tax_param_precision')],
+  ].filter(x => x[1] >= 10).sort((a, b) => b[1] - a[1]);
+  // population / design
+  const pop = [
+    ['report fMRI', nP(s => s.has_neural)],
+    ['study a clinical population', nP(s => s.tax_popclass_clinical === 1)],
+    ['study a developmental population', nP(s => s.tax_popclass_developmental === 1)],
+    ['run a deliberate intervention (drug, stimulation, training)', nP(s => s.NEW_intervention === 'yes')],
+  ].filter(x => x[1] >= 10).sort((a, b) => b[1] - a[1]);
+  const listBlock = (title, rows, unit) => `<div style="margin-bottom:0.8rem;">
+    <div style="font-weight:600;margin-bottom:0.2rem;">${title}</div>
+    ${rows.map(r => `<div style="font-size:0.9rem;margin:1px 0;"><span style="display:inline-block;min-width:2.4rem;font-weight:700;color:var(--deep-green);">${r[1]}</span> ${escHtml(unit)} ${escHtml(r[0])}</div>`).join('')}
+  </div>`;
+  el.innerHTML =
+    `<div style="font-weight:600;margin-bottom:0.2rem;">Neural: regions reported across studies, by network</div>${neuralRows}
+     <div style="height:0.6rem;"></div>` +
+    listBlock('Computational: recurring model ingredients', comp, 'studies use') +
+    listBlock('Populations & designs', pop, 'papers');
+}
+
 function renderFrontier() {
+  renderConsensus();
   renderFrontierBubbles();
   // init question-bank controls once
   const sel = document.getElementById('frontier-theme');
