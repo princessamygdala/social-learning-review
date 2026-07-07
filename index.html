@@ -3940,6 +3940,7 @@ function netRender() {
         `<span style="color:#bcd9c8;">${d.topic}</span> · ${d.primary_source} → ${d.primary_target}<br>` +
         `<span style="color:#cbb;">${d.model_family}</span> · ${d.method}${d.has_neural ? ' · neural' : ''}`;
       if (d.research_question) tip.innerHTML += `<br><span style="color:#e6d2a8;">Research question</span><br><span style="color:#f2f2f2;">${escHtml(d.research_question.slice(0, 260))}${d.research_question.length > 260 ? '…' : ''}</span>`;
+      if (d.sl_operationalization) tip.innerHTML += `<br><span style="color:#e6d2a8;">Operationalization</span><br><span style="color:#f2f2f2;">${escHtml(d.sl_operationalization.slice(0, 240))}${d.sl_operationalization.length > 240 ? '…' : ''}</span>`;
       if ((NET_STATE.groupKey === 'sl_framing_short' || NET_STATE.groupKey === 'sl_framing_nested') && d.sl_framing_note) tip.innerHTML += `<br><span style="color:#e6d2a8;">Framing:</span> <span style="font-style:italic;color:#f2f2f2;">${escHtml(d.sl_framing_note.slice(0, 200))}</span>`;
       if (NET_STATE.groupKey === 'def_category' && d.def_quote) {
         tip.innerHTML += `<br><span style="color:#e6d2a8;">${d.def_category}</span><br>` +
