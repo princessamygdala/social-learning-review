@@ -443,7 +443,6 @@ footer { padding: 2rem; text-align: center; color: var(--text-muted); font-size:
       <a href="#" class="nav-sub" data-mtab="frontier" style="padding: 0.3rem 0.4rem; color: white; border-bottom: 0;">Research frontier</a>
     </span>
   </span>
-  <a href="#" data-page="story">Story</a>
   <a href="#" data-page="submit">Submit</a>
   <a href="#" data-page="about">About</a>
   <a href="#" id="nav-search" title="Search the site" aria-label="Search the site" style="display:inline-flex;align-items:center;border-bottom:none;">
@@ -1080,6 +1079,39 @@ Suggestions for resources to add? Email
 </div><!--/readings-wrap-->
 
 </div>
+
+<!-- ===== film + story, appended to the bottom of the framework page ===== -->
+<style>
+#fw-story{max-width:860px;margin:2.4rem auto 0;}
+#fw-story .story-scene{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease;padding:2.1rem 0;border-top:1px solid var(--border);}
+#fw-story .story-scene.in{opacity:1;transform:none;}
+#fw-story .story-act{font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;color:var(--amber,#b97a3a);font-weight:700;}
+#fw-story .story-title{font-family:'Libre Baskerville',serif;font-size:1.5rem;line-height:1.25;color:var(--deep-green,#1d4f53);margin:.25rem 0 .6rem;}
+#fw-story .story-narr{font-size:1.05rem;line-height:1.75;color:var(--text);}
+#fw-story .story-lab{font-size:.74rem;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin-top:1.1rem;}
+#fw-story .story-studies{margin-top:.4rem;display:grid;gap:.5rem;}
+#fw-story .story-card{background:var(--cream-dark,#f4ecda);border-left:3px solid var(--deep-green,#1d4f53);border-radius:6px;padding:.55rem .8rem;cursor:pointer;transition:transform .15s ease;font-size:.95rem;}
+#fw-story .story-card:hover{transform:translateX(3px);}
+#fw-story .story-cite{font-weight:700;color:var(--deep-green,#1d4f53);}
+#fw-story .story-badge{float:right;font-size:.78rem;color:var(--text-muted);margin-left:.6rem;}
+</style>
+<hr style="margin:2.8rem 0 1.4rem;border:none;border-top:1px solid var(--border);">
+<h2 style="margin-top:0;">A day in the social world</h2>
+<p class="prose" style="color:var(--text-muted);">
+A short animated film: one learner walks through an ordinary day, and at each place the social-learning
+findings play out the way the studies say they would, from home and school to work, friends, the city,
+mental health, and back home. Every beat is grounded in real papers from this review. Press play, and turn
+on narration for the voiceover.
+</p>
+<div class="figure-wrap" style="padding:0;overflow:hidden;">
+  <iframe src="social_world_film.html" loading="lazy" style="width:100%;height:660px;border:0;display:block;" title="A day in the social world (animated film)"></iframe>
+</div>
+<div id="fw-story">
+  <h2>The story of a social learner</h2>
+  <p class="prose">A short, scroll-driven read of the same journey: each scene lists the most-cited papers that studied that step. Click any citation to open the paper.</p>
+  <div id="story-scenes"></div>
+</div>
+
 </section>
 
 <!-- ================= PAPERS ================= -->
@@ -1906,32 +1938,7 @@ Each section is collapsible — click the heading to expand or collapse.
 
 </section>
 
-<!-- ================= STORY ================= -->
-<section class="page" id="page-story">
-<style>
-#page-story .story-wrap{max-width:860px;margin:0 auto;}
-#page-story .story-scene{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s ease;padding:2.3rem 0;border-top:1px solid var(--border);}
-#page-story .story-scene.in{opacity:1;transform:none;}
-#page-story .story-act{font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;color:var(--amber,#b97a3a);font-weight:700;}
-#page-story .story-title{font-family:'Libre Baskerville',serif;font-size:1.6rem;line-height:1.25;color:var(--deep-green,#1d4f53);margin:.25rem 0 .6rem;}
-#page-story .story-narr{font-size:1.05rem;line-height:1.75;color:var(--text);}
-#page-story .story-lab{font-size:.74rem;text-transform:uppercase;letter-spacing:.09em;color:var(--text-muted);margin-top:1.1rem;}
-#page-story .story-studies{margin-top:.4rem;display:grid;gap:.5rem;}
-#page-story .story-card{background:var(--cream-dark,#f4ecda);border-left:3px solid var(--deep-green,#1d4f53);border-radius:6px;padding:.55rem .8rem;cursor:pointer;transition:transform .15s ease;font-size:.95rem;}
-#page-story .story-card:hover{transform:translateX(3px);}
-#page-story .story-cite{font-weight:700;color:var(--deep-green,#1d4f53);}
-#page-story .story-badge{float:right;font-size:.78rem;color:var(--text-muted);margin-left:.6rem;}
-</style>
-<div class="story-wrap">
-<h1>The story of a social learner</h1>
-<p class="prose" style="font-size:1.05rem;">
-A short, scroll-driven journey through how one agent becomes a social learner. The narration is
-illustrative, but every scene is grounded in real studies from this review: each lists the most-cited
-papers that studied that step, and you can click any citation to open the paper. Scroll to begin.
-</p>
-<div id="story-scenes"></div>
-</div>
-</section>
+<!-- (Story and film now live at the bottom of the framework page) -->
 
 <!-- ================= SUBMIT ================= -->
 <section class="page" id="page-submit">
@@ -2345,9 +2352,9 @@ function showPage(name, push=true) {
         }
         renderRegionGaps(); renderSocialParamGaps(); renderContentHeatmap(); renderTypeContentHeatmaps();
       } catch (e) {}
+      try { renderStory(); } catch (e) {}
     }, 50);
   }
-  if (name === 'story') { try { renderStory(); } catch (e) {} }
   if (push) { try { history.pushState({page: name}, '', '#' + name); } catch (e) {} }
 }
 // Browser back/forward returns to the previous view (e.g. back from a paper to the brain map).
