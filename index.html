@@ -3081,7 +3081,6 @@ function paperCard(p) {
             : ''}
       </div>
       <div class="focus">${escapeHtml(tidyText(p.study_focus))}</div>
-      ${(p._studies && p._studies[0] && p._studies[0].research_question) ? `<div class="focus" style="margin-top:.4rem;"><strong style="color:var(--deep-green,#2a6e70);">Research question:</strong> ${escapeHtml(p._studies[0].research_question)}</div>` : ''}
       <div class="meta-row">
         <strong>Source:</strong> ${escapeHtml(srcStr)} &nbsp;·&nbsp;
         <strong>Target:</strong> ${escapeHtml(tgtStr)} &nbsp;·&nbsp;
@@ -4876,6 +4875,7 @@ function renderStudyBody(s) {
       <tr><th>Stimuli</th><td>${cell(s.stimuli)}</td></tr>
       <tr><th>Method</th><td>${cell(s.method_full || s.method)}</td></tr>
 ${fieldRow}
+      <tr><th>Research question</th><td>${cell(s.research_question)}</td></tr>
       <tr><th>Main result &amp; effect sizes</th><td>${renderResultsTable(s.main_result, s.effect_size)}</td></tr>
     </table>
     </div>
