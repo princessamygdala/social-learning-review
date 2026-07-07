@@ -1717,6 +1717,7 @@ the nodes. Drag nodes, hover for the citation, click to open the paper.
       <option value="model">Model</option>
       <option value="domain">Domain</option>
       <option value="any">Any shared tag</option>
+      <option value="citations">Citations (who cites whom)</option>
     </select>
   </label>
   <label>Color by:
@@ -6668,16 +6669,21 @@ function renderAtlasGlobal() {
   };
   const N = STUDIES.length, K = 3;
   const edgeSet = new Set(), links = [];
-  for (let i = 0; i < N; i++) {
-    const cand = [];
-    for (let j = 0; j < N; j++) { if (j === i) continue; const c = shareCount(i, j); if (c > 0) cand.push([j, c]); }
-    cand.sort((a, b) => b[1] - a[1]);
-    cand.slice(0, K).forEach(([j, c]) => { const key = i < j ? i + '-' + j : j + '-' + i; if (!edgeSet.has(key)) { edgeSet.add(key); links.push({ source: i, target: j, w: c }); } });
+  if (dim === 'citations' && typeof CORPUS_CITE_EDGES !== 'undefined') {
+    const pidIndex = {}; STUDIES.forEach((s, i) => { if (!(s.paper_id in pidIndex)) pidIndex[s.paper_id] = i; });
+    CORPUS_CITE_EDGES.forEach(([a, b]) => { const i = pidIndex[a], j = pidIndex[b]; if (i != null && j != null && i !== j) { const key = i + '>' + j; if (!edgeSet.has(key)) { edgeSet.add(key); links.push({ source: i, target: j, w: 1 }); } } });
+  } else {
+    for (let i = 0; i < N; i++) {
+      const cand = [];
+      for (let j = 0; j < N; j++) { if (j === i) continue; const c = shareCount(i, j); if (c > 0) cand.push([j, c]); }
+      cand.sort((a, b) => b[1] - a[1]);
+      cand.slice(0, K).forEach(([j, c]) => { const key = i < j ? i + '-' + j : j + '-' + i; if (!edgeSet.has(key)) { edgeSet.add(key); links.push({ source: i, target: j, w: c }); } });
+    }
   }
   // color scale
   const cats = [...new Set(STUDIES.map((s, i) => atlasColorKey(i, cdim)))].sort();
   const palette = d3.scaleOrdinal(cats, cats.map((_, k) => d3.hsl((k * 360 / cats.length + 20) % 360, 0.5, 0.55).toString()));
-  const nodes = STUDIES.map((s, i) => ({ id: i, cit: s.citation_short, pid: s.paper_id, col: palette(atlasColorKey(i, cdim)) }));
+  const nodes = STUDIES.map((s, i) => ({ id: i, cit: s.citation_short, pid: s.paper_id, col: palette(atlasColorKey(i, cdim)), cc: s.corpus_cited_by || 0 }));
 
   const svg = d3.select(svgEl); svg.selectAll('*').remove();
   const g = svg.append('g');
@@ -6686,8 +6692,8 @@ function renderAtlasGlobal() {
     .selectAll('line').data(links).join('line').attr('stroke-width', d => 0.4 + 0.3 * d.w);
   const tip = document.getElementById('atlas-global-tip');
   const node = g.append('g').selectAll('circle').data(nodes).join('circle')
-    .attr('r', 4.5).attr('fill', d => d.col).attr('stroke', '#fff').attr('stroke-width', 0.6).style('cursor', 'pointer')
-    .on('mouseover', (e, d) => { tip.style.opacity = 1; tip.textContent = d.cit; tip.style.left = (e.offsetX + 12) + 'px'; tip.style.top = (e.offsetY + 12) + 'px'; })
+    .attr('r', d => dim === 'citations' ? (3 + Math.sqrt(d.cc) * 1.7) : 4.5).attr('fill', d => d.col).attr('stroke', '#fff').attr('stroke-width', 0.6).style('cursor', 'pointer')
+    .on('mouseover', (e, d) => { tip.style.opacity = 1; tip.textContent = d.cit + (dim === 'citations' ? ' · cited by ' + d.cc + ' here' : ''); tip.style.left = (e.offsetX + 12) + 'px'; tip.style.top = (e.offsetY + 12) + 'px'; })
     .on('mousemove', (e) => { tip.style.left = (e.offsetX + 12) + 'px'; tip.style.top = (e.offsetY + 12) + 'px'; })
     .on('mouseout', () => { tip.style.opacity = 0; })
     .on('click', (e, d) => openPaperModal(d.pid))
@@ -6713,7 +6719,9 @@ function renderAtlasGlobal() {
   document.getElementById('atlas-global-legend').innerHTML =
     `<div style="font-weight:600;margin-bottom:0.2rem;">Color: ${cdim}</div>` +
     legend.map(([k, n]) => `<div style="display:flex;align-items:center;gap:0.35rem;margin:1px 0;"><span style="width:9px;height:9px;border-radius:50%;background:${palette(k)};display:inline-block;"></span>${escHtml(String(k).replace(/_/g, ' ').slice(0, 22))} <span style="color:var(--text-muted);">${n}</span></div>`).join('');
-  document.getElementById('atlas-global-stats').textContent = `${N} studies · ${links.length} links by shared ${dim === 'any' ? 'tags' : dim}`;
+  document.getElementById('atlas-global-stats').textContent = dim === 'citations'
+    ? `${N} studies · ${links.length} citations within this review · node size = times cited here`
+    : `${N} studies · ${links.length} links by shared ${dim === 'any' ? 'tags' : dim}`;
 }
 
 // ---------------- Init the sandbox tab ----------------
