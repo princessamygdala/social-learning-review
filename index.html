@@ -4799,11 +4799,10 @@ function renderStudyBody(s) {
         : `<span class="preflow">${escHtml(params)}</span>`;
       rows += `<tr><th>Parameters</th><td>${paramHtml}</td></tr>`;
     }
-    if (s.social_param) rows += `<tr><th>Social parameter(s)</th><td><span class="preflow">${escHtml(cleanField(s.social_param))}</span></td></tr>`;
     if (tested) rows += `<tr><th>All models tested</th><td>${renderAllModelsTable(s.all_models_tested)}</td></tr>`;
     if (s.model_comparison_metric) rows += `<tr><th>Comparison metric</th><td>${escHtml(cleanField(s.model_comparison_metric))}</td></tr>`;
-    if (s.how_model_fit) rows += `<tr><th>How fit</th><td>${escHtml(cleanField(s.how_model_fit))}</td></tr>`;
-    if (s.data_type_fit_to) rows += `<tr><th>Data type fitted to</th><td>${escHtml(cleanField(s.data_type_fit_to))}</td></tr>`;
+    if (s.how_model_fit) rows += `<tr><th>Fitting method</th><td>${escHtml(cleanField(s.how_model_fit))}</td></tr>`;
+    if (s.data_type_fit_to) rows += `<tr><th>Fitted data</th><td>${escHtml(cleanField(s.data_type_fit_to))}</td></tr>`;
     return rows ? `<table class="subtable">${rows}</table>` : '<span class="empty">—</span>';
   }
 
@@ -4880,14 +4879,12 @@ function renderStudyBody(s) {
     <h3>Computational level</h3>
     <table class="detail">
       <tr><th>Study focus</th><td>${cell(s.study_focus)}</td></tr>
-      <tr><th>Source / target / context</th><td>${renderLearningModeTable(s.learning_mode_description)}</td></tr>
+      <tr><th>Research question</th><td>${cell(s.research_question)}</td></tr>
       <tr><th>Task description</th><td>${cell(s.task_description)}</td></tr>
       <tr><th>Players</th><td>${cell(s.players)}</td></tr>
       <tr><th>Stimuli</th><td>${cell(s.stimuli)}</td></tr>
-      <tr><th>Method</th><td>${cell(s.method_full || s.method)}</td></tr>
-${fieldRow}
-      <tr><th>Research question</th><td>${cell(s.research_question)}</td></tr>
       <tr><th>Main result &amp; effect sizes</th><td>${renderResultsTable(s.main_result, s.effect_size)}</td></tr>
+      <tr><th>Source / target / context</th><td>${renderLearningModeTable(s.learning_mode_description)}</td></tr>
     </table>
     </div>
   `;
@@ -4934,17 +4931,20 @@ ${fieldRow}
   })();
   const quality = `
     <div class="modal-section">
-    <h3>Reporting &amp; sample</h3>
+    <h3>Study methodology, limitations &amp; future directions</h3>
     <table class="detail">
-      <tr><th>Sample size</th><td>${cell(s.sample_size)}</td></tr>
-      <tr><th>Population</th><td>${popCell}</td></tr>
       ${s.NEW_design ? `<tr><th>Study design</th><td>${escHtml(s.NEW_design)}${s.NEW_manipulation ? ' <span style="color:var(--text-muted);">— ' + escHtml(s.NEW_manipulation) + '</span>' : ''}</td></tr>` : ''}
       ${s.NEW_intervention === 'yes' ? `<tr><th>Intervention</th><td>${escHtml(s.NEW_intervention_type || 'yes')}</td></tr>` : ''}
+${fieldRow}
+      <tr><th>Method</th><td>${cell(s.method_full || s.method)}</td></tr>
+      <tr><th>Population</th><td>${popCell}</td></tr>
+      <tr><th>Sample size</th><td>${cell(s.sample_size)}</td></tr>
+      <tr><th>Publication type</th><td>${cell(s.publication_type)}</td></tr>
+      <tr><th>Preregistered</th><td>${cell(s.preregistered) || '<span class="empty">not reported</span>'}</td></tr>
+      ${s.social_param ? `<tr><th>Social parameter(s)</th><td><span class="preflow">${escHtml(cleanField(s.social_param))}</span></td></tr>` : ''}
       ${s.NEW_modeling_role && s.NEW_modeling_role !== 'none' ? `<tr><th>Role of modeling</th><td>${escHtml(s.NEW_modeling_role.replace(/_/g,' / '))}${s.NEW_param_manipulation_link ? ' <span style="color:var(--text-muted);">— ' + escHtml(s.NEW_param_manipulation_link) + '</span>' : ''}</td></tr>` : ''}
       ${paramRows}
-      <tr><th>Publication type</th><td>${cell(s.publication_type)}</td></tr>
       <tr><th>Code / repository</th><td>${(s.code_url||'').match(/^https?:\/\//) ? `<a href="${escHtml(s.code_url)}" target="_blank">${escHtml(s.code_url)}</a>` : '<span class="empty">not reported</span>'}</td></tr>
-      <tr><th>Preregistered</th><td>${cell(s.preregistered) || '<span class="empty">not reported</span>'}</td></tr>
       <tr><th>Authors' own limitations</th><td>${bulletCell(s.limitations_reported)}</td></tr>
       <tr><th>Future directions</th><td>${bulletCell(s.NEW_future_directions_reported)}</td></tr>
     </table>
