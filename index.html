@@ -1287,6 +1287,7 @@ re-arrange. Clicking a study filters the Papers tab to it.
   <span class="pill net-sub" data-sub="fmri">fMRI only</span>
 </div>
 
+<div id="net-filter-status" style="font-size: 0.85rem; color: var(--text-muted); margin: 0.4rem 0;"></div>
 <div id="net-stats" style="font-size: 0.9rem; color: var(--text-muted); margin: 0.5rem 0 0.8rem;"></div>
 
 <div id="net-wrap" style="background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0; overflow: hidden; position: relative;">
@@ -2756,40 +2757,28 @@ function initFilters() {
   });
 
   document.getElementById('clear-filters').addEventListener('click', () => {
-    FILTER_STATE.source.clear();
-    FILTER_STATE.target.clear();
-    FILTER_STATE.model.clear();
-    FILTER_STATE.mbmf.clear();
-    FILTER_STATE.constellation.clear();
-    FILTER_STATE.method.clear();
-    FILTER_STATE.analysis.clear();
-    FILTER_STATE.field.clear();
-    FILTER_STATE.players.clear();
-    FILTER_STATE.partner.clear();
-    FILTER_STATE.outcome.clear();
-    FILTER_STATE.task_paradigm.clear();
-    FILTER_STATE.source_content.clear();
-    FILTER_STATE.target_content.clear();
-    FILTER_STATE.population.clear();
-    FILTER_STATE.topic_v2.clear();
-    FILTER_STATE.tax_topic.clear();
-    FILTER_STATE.tax_domain.clear();
-    FILTER_STATE.tax_pop.clear();
-    FILTER_STATE.tax_popclass.clear();
-    FILTER_STATE.tax_mod.clear();
-    FILTER_STATE.ctx.clear();
-    FILTER_STATE.flags.clear();
-    FILTER_STATE.yearMin = null;
-    FILTER_STATE.yearMax = null;
-    FILTER_STATE.search = '';
-    FILTER_STATE.cellSource = null;
-    FILTER_STATE.cellTarget = null;
-    document.querySelectorAll('.pill.active').forEach(p => p.classList.remove('active'));
-    document.getElementById('search-input').value = '';
-    document.getElementById('year-min').value = '';
-    document.getElementById('year-max').value = '';
+    clearAllFilters();
     renderStudies();
   });
+}
+
+// Resets every filter to its empty state. Shared by the Papers "clear" button
+// and any other view (Study Network, Atlas) that offers its own clear link,
+// since they all read/write the same FILTER_STATE.
+function clearAllFilters() {
+  for (const k in FILTER_STATE) {
+    const v = FILTER_STATE[k];
+    if (v instanceof Set) v.clear();
+  }
+  FILTER_STATE.yearMin = null;
+  FILTER_STATE.yearMax = null;
+  FILTER_STATE.search = '';
+  FILTER_STATE.cellSource = null;
+  FILTER_STATE.cellTarget = null;
+  document.querySelectorAll('.pill.active').forEach(p => p.classList.remove('active'));
+  const si = document.getElementById('search-input'); if (si) si.value = '';
+  const ymin = document.getElementById('year-min'); if (ymin) ymin.value = '';
+  const ymax = document.getElementById('year-max'); if (ymax) ymax.value = '';
 }
 
 function buildPillRow(containerId, items, key) {
@@ -2854,6 +2843,21 @@ function tagKeywords(s) {
   if (s.NEW_intervention === 'yes') out.push('intervention');
   if (Array.isArray(s.keywords) && s.keywords.length) out.push(s.keywords.join(' '));
   return out.join(' ').toLowerCase();
+}
+
+// Total number of active filter selections across every FILTER_STATE key —
+// shared by any view (Papers, Study Network, Atlas) that wants to show/react
+// to "how many filters are currently on," since they all read the same state.
+function countActiveFilters() {
+  let n = 0;
+  for (const k in FILTER_STATE) {
+    const v = FILTER_STATE[k];
+    if (v instanceof Set) n += v.size;
+  }
+  if (FILTER_STATE.search) n += 1;
+  if (FILTER_STATE.yearMin !== null) n += 1;
+  if (FILTER_STATE.yearMax !== null) n += 1;
+  return n;
 }
 
 function passesFilters(s) {
@@ -3859,10 +3863,19 @@ function netRender() {
   svg.selectAll('*').remove();
   const W = svg.node().clientWidth || 800;
   const H = svg.node().clientHeight || 640;
-  // Subset filter
-  let subset = STUDIES.slice();
+  // Subset filter — respects the SAME FILTER_STATE as the Papers tab, so any
+  // combination of filters set there (population, topic, model, method, etc.)
+  // also restricts the network. The behavioral/fMRI quick-toggle stacks on top.
+  let subset = STUDIES.filter(passesFilters);
   if (NET_STATE.subset === 'behavioral') subset = subset.filter(s => !s.has_neural);
   if (NET_STATE.subset === 'fmri') subset = subset.filter(s => s.has_neural);
+  const nActiveFilters = countActiveFilters();
+  const fsEl = document.getElementById('net-filter-status');
+  if (fsEl) {
+    fsEl.innerHTML = nActiveFilters > 0
+      ? `<strong>${nActiveFilters}</strong> filter${nActiveFilters === 1 ? '' : 's'} active from the Papers tab (${subset.length} of ${STUDIES.length} studies shown) — <a href="#" onclick="event.preventDefault();showPage('papers');">edit in Papers</a> · <a href="#" onclick="event.preventDefault();clearAllFilters();netRender();">clear</a>`
+      : `No filters active — showing all ${subset.length} studies. Set filters on the <a href="#" onclick="event.preventDefault();showPage('papers');">Papers tab</a> to narrow this view; they apply here too.`;
+  }
   const groupKey = NET_STATE.groupKey;
   // Build node array (clone so simulation positions don't mutate STUDIES)
   function nodeGroup(s) {
