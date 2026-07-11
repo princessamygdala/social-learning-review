@@ -1709,8 +1709,12 @@ study links to both. Click a neighbour to re-center, or a citation to open the p
 <p class="prose" style="color: var(--text-muted);">
 Every study at once. Two studies are linked when they share tags in the dimension
 you choose in <strong>Link by</strong>, so switching it re-wires the whole network
-(topic clusters become population clusters, etc.). <strong>Color by</strong> tints
-the nodes. Drag nodes, hover for the citation, click to open the paper.
+(topic clusters become population clusters, etc.) — including <strong>Brain
+region</strong>, which links studies that report a peak in the same one of the 25
+canonical regions. <strong>Color by</strong> tints the nodes. Drag nodes, hover for
+the citation, click to open the paper. This respects whatever filters are active on
+the Papers tab (e.g. narrow to ROI-only or whole-brain-only analyses, or a specific
+population/task paradigm, and the network updates to match).
 </p>
 <div class="filter-bar" style="display:flex;flex-wrap:wrap;gap:0.6rem;align-items:center;margin:0.4rem 0 0.6rem;">
   <label>Link by:
@@ -1720,6 +1724,7 @@ the nodes. Drag nodes, hover for the citation, click to open the paper.
       <option value="mod">Modality</option>
       <option value="model">Model</option>
       <option value="domain">Domain</option>
+      <option value="region">Brain region</option>
       <option value="any">Any shared tag</option>
       <option value="citations">Citations (who cites whom)</option>
     </select>
@@ -1731,6 +1736,7 @@ the nodes. Drag nodes, hover for the citation, click to open the paper.
       <option value="pop">Population</option>
       <option value="mod">Modality</option>
       <option value="model">Model</option>
+      <option value="region">Brain region</option>
       <option value="design">Design</option>
     </select>
   </label>
@@ -6560,15 +6566,40 @@ const ATLAS_DIMS = [
   { key: 'mod',     prefix: 'tax_mod_',      label: 'Modality', color: '#7F77DD' },
   { key: 'model',   prefix: 'tax_model_',    label: 'Model',    color: '#3A7E8A' },
   { key: 'domain',  prefix: 'tax_domain_',   label: 'Domain',   color: '#A8553A' },
+  { key: 'region',  prefix: null,            label: 'Brain region', color: '#C9573F' },
 ];
-let ATLAS_STATE = { focus: null, dims: new Set(['topic', 'pop', 'mod', 'model', 'domain']) };
+let ATLAS_STATE = { focus: null, dims: new Set(['topic', 'pop', 'mod', 'model', 'domain', 'region']) };
 let ATLAS_TAGSETS = null;
+
+// study_id -> [canonical brain region names], built from BRAIN_REGIONS (25 named
+// regions, each listing the papers/studies whose peaks fall in it). Decodes
+// BRAIN_REGIONS eagerly here rather than relying on the Brain tab having been
+// visited first, since Atlas may be used before that.
+let STUDY_REGIONS_MAP = null;
+function studyRegionsMap() {
+  if (STUDY_REGIONS_MAP) return STUDY_REGIONS_MAP;
+  STUDY_REGIONS_MAP = {};
+  if (!BRAIN_REGIONS && typeof decodeB64Json === 'function' && typeof BRAIN_REGIONS_B64 !== 'undefined') {
+    try { BRAIN_REGIONS = decodeB64Json(BRAIN_REGIONS_B64); } catch (e) {}
+  }
+  if (BRAIN_REGIONS && BRAIN_REGIONS.regions) {
+    BRAIN_REGIONS.regions.forEach(r => {
+      (r.papers || []).forEach(p => {
+        if (!p.study_id) return;
+        (STUDY_REGIONS_MAP[p.study_id] || (STUDY_REGIONS_MAP[p.study_id] = new Set())).add(r.name);
+      });
+    });
+  }
+  return STUDY_REGIONS_MAP;
+}
 
 function atlasTagsets() {
   if (ATLAS_TAGSETS) return ATLAS_TAGSETS;
+  const regions = studyRegionsMap();
   ATLAS_TAGSETS = STUDIES.map(s => {
     const t = {};
     ATLAS_DIMS.forEach(d => {
+      if (d.key === 'region') { t.region = Array.from(regions[s.study_id] || []); return; }
       t[d.key] = Object.keys(s).filter(k => k.startsWith(d.prefix) && s[k] === 1)
         .map(k => k.slice(d.prefix.length));
     });
@@ -6675,7 +6706,9 @@ function atlasColorKey(i, dim) {
   if (dim === 'any') return (t.topic[0] || 'other');
   const arr = t[dim];
   if (arr && arr.length) return arr[0];
-  return dim === 'model' ? 'no computational model' : 'unspecified';
+  if (dim === 'model') return 'no computational model';
+  if (dim === 'region') return 'no brain region reported';
+  return 'unspecified';
 }
 function initAtlasGlobal() {
   const ls = document.getElementById('atlas-link'), cs = document.getElementById('atlas-color');
@@ -6693,28 +6726,34 @@ function renderAtlasGlobal() {
   const W = svgEl.clientWidth || 760, H = 600;
   const dim = ATLAS_G_STATE.link, cdim = ATLAS_G_STATE.color;
   const tags = atlasTagsets();
+  // Respects the shared Papers-tab filters — same pattern as Study Network.
+  // Keep original STUDIES indices as node ids (d3 only needs them unique, not
+  // sequential), so downstream lookups (tags[i], atlasColorKey(i,...),
+  // STUDIES[i]) stay unchanged; just restrict which indices participate.
+  const idx = STUDIES.map((s, i) => i).filter(i => passesFilters(STUDIES[i]));
+  const nActiveFilters = countActiveFilters();
   // KNN backbone: link each study to its top-3 partners by shared tags in `dim`
   const shareCount = (i, j) => {
     if (dim === 'any') { let n = 0; ATLAS_DIMS.forEach(d => { n += tags[i][d.key].filter(x => tags[j][d.key].includes(x)).length; }); return n; }
     return tags[i][dim].filter(x => tags[j][dim].includes(x)).length;
   };
-  const N = STUDIES.length, K = 3;
+  const N = idx.length, K = 3;
   const edgeSet = new Set(), links = [];
   if (dim === 'citations' && typeof CORPUS_CITE_EDGES !== 'undefined') {
-    const pidIndex = {}; STUDIES.forEach((s, i) => { if (!(s.paper_id in pidIndex)) pidIndex[s.paper_id] = i; });
+    const pidIndex = {}; idx.forEach(i => { const s = STUDIES[i]; if (!(s.paper_id in pidIndex)) pidIndex[s.paper_id] = i; });
     CORPUS_CITE_EDGES.forEach(([a, b]) => { const i = pidIndex[a], j = pidIndex[b]; if (i != null && j != null && i !== j) { const key = i + '>' + j; if (!edgeSet.has(key)) { edgeSet.add(key); links.push({ source: i, target: j, w: 1 }); } } });
   } else {
-    for (let i = 0; i < N; i++) {
+    idx.forEach(i => {
       const cand = [];
-      for (let j = 0; j < N; j++) { if (j === i) continue; const c = shareCount(i, j); if (c > 0) cand.push([j, c]); }
+      idx.forEach(j => { if (j === i) return; const c = shareCount(i, j); if (c > 0) cand.push([j, c]); });
       cand.sort((a, b) => b[1] - a[1]);
       cand.slice(0, K).forEach(([j, c]) => { const key = i < j ? i + '-' + j : j + '-' + i; if (!edgeSet.has(key)) { edgeSet.add(key); links.push({ source: i, target: j, w: c }); } });
-    }
+    });
   }
   // color scale
-  const cats = [...new Set(STUDIES.map((s, i) => atlasColorKey(i, cdim)))].sort();
+  const cats = [...new Set(idx.map(i => atlasColorKey(i, cdim)))].sort();
   const palette = d3.scaleOrdinal(cats, cats.map((_, k) => d3.hsl((k * 360 / cats.length + 20) % 360, 0.5, 0.55).toString()));
-  const nodes = STUDIES.map((s, i) => ({ id: i, cit: s.citation_short, pid: s.paper_id, col: palette(atlasColorKey(i, cdim)), cc: s.corpus_cited_by || 0 }));
+  const nodes = idx.map(i => { const s = STUDIES[i]; return { id: i, cit: s.citation_short, pid: s.paper_id, col: palette(atlasColorKey(i, cdim)), cc: s.corpus_cited_by || 0 }; });
 
   const svg = d3.select(svgEl); svg.selectAll('*').remove();
   const g = svg.append('g');
@@ -6745,14 +6784,15 @@ function renderAtlasGlobal() {
       node.attr('cx', d => d.x).attr('cy', d => d.y);
     });
   // legend (top 14 categories by frequency)
-  const freq = {}; STUDIES.forEach((s, i) => { const k = atlasColorKey(i, cdim); freq[k] = (freq[k] || 0) + 1; });
+  const freq = {}; idx.forEach(i => { const k = atlasColorKey(i, cdim); freq[k] = (freq[k] || 0) + 1; });
   const legend = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 14);
   document.getElementById('atlas-global-legend').innerHTML =
     `<div style="font-weight:600;margin-bottom:0.2rem;">Color: ${cdim}</div>` +
     legend.map(([k, n]) => `<div style="display:flex;align-items:center;gap:0.35rem;margin:1px 0;"><span style="width:9px;height:9px;border-radius:50%;background:${palette(k)};display:inline-block;"></span>${escHtml(String(k).replace(/_/g, ' ').slice(0, 22))} <span style="color:var(--text-muted);">${n}</span></div>`).join('');
-  document.getElementById('atlas-global-stats').textContent = dim === 'citations'
+  document.getElementById('atlas-global-stats').textContent = (dim === 'citations'
     ? `${N} studies · ${links.length} citations within this review · node size = times cited here`
-    : `${N} studies · ${links.length} links by shared ${dim === 'any' ? 'tags' : dim}`;
+    : `${N} studies · ${links.length} links by shared ${dim === 'any' ? 'tags' : dim}`)
+    + (nActiveFilters > 0 ? ` · ${nActiveFilters} filter${nActiveFilters === 1 ? '' : 's'} active from the Papers tab (of ${STUDIES.length} total)` : '');
 }
 
 // ---------------- Init the sandbox tab ----------------
