@@ -356,25 +356,55 @@ render();
 })();
 </script><script>
 /* Make cited papers clickable: wrap "Author et al., YEAR" style citations in a
-   Google Scholar link. Runs on load and on any dynamically rendered content. */
+   link back to the site's own paper card (Papers tab, filtered to that citation)
+   when embedded in the review iframe; falls back to Google Scholar only when
+   opened standalone (no parent site to route into). Runs on load and on any
+   dynamically rendered content. */
 (function () {
   var CITE = /\b([A-Z][A-Za-z.'’-]+(?:\s+et al\.| (?:&amp;|&|and) [A-Z][A-Za-z.'’-]+)?),?\s*\(?((?:19|20)\d{2})\)?/g;
   var SKIP = { A: 1, SCRIPT: 1, STYLE: 1, BUTTON: 1 };
+  function hasParentSite() {
+    try { return !!(window.parent && window.parent !== window && window.parent.brainStudyClicked); }
+    catch (e) { return false; }
+  }
+  function goToPaperCard(citationText) {
+    try {
+      if (window.parent && window.parent !== window) {
+        if (typeof window.parent.brainStudyClicked === 'function') {
+          window.parent.brainStudyClicked(citationText);
+          return true;
+        }
+        window.parent.postMessage({ type: 'brainStudyClick', citation: citationText }, '*');
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
   function linkifyTextNode(node) {
     var text = node.nodeValue;
     if (!text || text.length < 6 || !/\d{4}/.test(text)) return;
     CITE.lastIndex = 0;
     if (!CITE.test(text)) return;
     CITE.lastIndex = 0;
+    var embedded = hasParentSite();
     var frag = document.createDocumentFragment(), last = 0, m;
     while ((m = CITE.exec(text)) !== null) {
       if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      let citeText = m[0].replace(/&amp;/g, '&');
       var a = document.createElement('a');
-      a.href = 'https://scholar.google.com/scholar?q=' + encodeURIComponent(m[0].replace(/&amp;/g, '&'));
-      a.target = '_blank'; a.rel = 'noopener';
+      a.href = embedded ? '#' : ('https://scholar.google.com/scholar?q=' + encodeURIComponent(citeText));
+      if (!embedded) { a.target = '_blank'; a.rel = 'noopener'; }
       a.style.color = 'inherit'; a.style.textDecoration = 'underline dotted';
-      a.title = 'Look up on Google Scholar';
-      a.textContent = m[0].replace(/&amp;/g, '&');
+      a.title = embedded ? 'Open this paper on the review site' : 'Look up on Google Scholar';
+      a.textContent = citeText;
+      if (embedded) {
+        a.addEventListener('click', function (ev) {
+          ev.preventDefault();
+          if (!goToPaperCard(citeText)) {
+            window.open('https://scholar.google.com/scholar?q=' + encodeURIComponent(citeText), '_blank', 'noopener');
+          }
+        });
+      }
       frag.appendChild(a);
       last = m.index + m[0].length;
     }
