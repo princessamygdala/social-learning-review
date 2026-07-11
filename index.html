@@ -1309,7 +1309,7 @@ of that series.
 
 <h3 style="margin-top: 0.6rem;">Milestone studies (most cited)</h3>
 <p class="prose" style="color: var(--text-muted); font-size: 0.9rem;">
-The most-cited papers in the corpus (total citations from OpenAlex): the ones that sparked the
+The most-cited papers in the study space (total citations from OpenAlex): the ones that sparked the
 most follow-up work. Click a row to open it in the Papers tab.
 </p>
 <div id="hist-milestones" style="margin: 0.3rem 0 1.4rem; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;"></div>
@@ -1862,7 +1862,7 @@ Each section is collapsible — click the heading to expand or collapse.
   <h2 style="margin-top:0;">Self vs Other learning</h2>
   <p class="prose" style="color: var(--text-muted); max-width:60rem;">
     A large family of studies pit learning about <em>oneself</em> against learning about, for, or from
-    <em>another agent</em>. This view collects every study in the corpus that builds such a self&ndash;other
+    <em>another agent</em>. This view collects every study in the study space that builds such a self&ndash;other
     contrast into its learning task or model (any model family: RL, Bayesian, model-based, utility), coded from
     full text on how the contrast is <strong>operationalized</strong>. Use it to ask questions like &ldquo;which
     self/other studies used pain-avoidance rather than reward?&rdquo; or &ldquo;which measured antisocial or
@@ -6061,7 +6061,7 @@ function renderParamCats() {
   });
   table += `</tbody></table>`;
   const totSocial = all.filter(d => d.is_social === 'social').length;
-  table += `<div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.3rem;">${totSocial} of ${all.length} fitted parameters are flagged social in the source text; only ${all.length - totSocial} are non-social controls. In a corpus of social-learning studies, even the learning rates and weights are reported as social parameters, which is why the social column dominates.</div>`;
+  table += `<div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.3rem;">${totSocial} of ${all.length} fitted parameters are flagged social in the source text; only ${all.length - totSocial} are non-social controls. In a study space of social-learning studies, even the learning rates and weights are reported as social parameters, which is why the social column dominates.</div>`;
   document.getElementById('param-cat-table').innerHTML = table;
 
   // Description panel: full text for the selected category (or all when none picked)
