@@ -4646,8 +4646,13 @@ function openPaperModal(paperId) {
     : '';
   const verified = isHumanVerified(head);
   const reviewTag = `<span title="${verified ? 'A human reviewer has checked this paper’s eligibility and category extraction.' : 'This paper’s AI extraction has not yet been human-verified; please double-check against the original article.'}" style="color:var(--text-muted);font-size:0.8rem;border-bottom:1px dotted var(--text-muted);cursor:help;">${verified ? '✓ human-verified' : 'AI-extracted · not yet human-verified'}</span>`;
+  const flaggedText = (head.flagged_fields || '').trim();
+  const nFlags = flaggedText ? flaggedText.split('\n').filter(l => l.trim()).length : 0;
+  const confTag = nFlags > 0
+    ? `<span title="${escHtml(flaggedText)}" style="color:#B07A2A;font-size:0.8rem;border-bottom:1px dotted #B07A2A;cursor:help;">${nFlags} field${nFlags === 1 ? '' : 's'} flagged low/medium confidence</span>`
+    : `<span style="color:var(--text-muted);font-size:0.8rem;">no fields flagged</span>`;
   document.getElementById('modal-meta').innerHTML =
-    `${escHtml(head.year || '')} · ${escHtml(head.publication_type || '—')} · ${doiLink}${codeLink ? ' · ' + codeLink : ''} · ${reviewTag}`;
+    `${escHtml(head.year || '')} · ${escHtml(head.publication_type || '—')} · ${doiLink}${codeLink ? ' · ' + codeLink : ''} · ${reviewTag} · ${confTag}`;
 
   // Render each study in its own block
   let body = '';
