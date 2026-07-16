@@ -22,7 +22,7 @@ a089a484bca4fd63e_s1,a089a484bca4fd63e,Zonca et al. (2021),2021,YES,Observationa
 a092feb2d1b67b42c_s1,a092feb2d1b67b42c,Wu et al. (2025),2025,YES,Cooperation learning,,,,,,,pending
 a095f158fe440440f_s1,a095f158fe440440f,Shaw et al. (2018),2018,YES,Cooperation learning / reciprocity learning,,,,,,,pending
 a0982d65a745c9665_s1,a0982d65a745c9665,Hula et al. (2015),2015,YES,Trust learning,,,,,,,pending
-a098ba4b86e8ffd67_s1,a098ba4b86e8ffd67,Luo et al. (2025),2025,YES,Social advice giving / alignment bias,,,,,,,pending
+a098ba4b86e8ffd67_s1,a098ba4b86e8ffd67,Luo et al. (2025),2025,YES,Social advice giving / alignment bias,,,,"[TF-pass 2026-07-16] Structural: full text appears to describe 4 distinct studies (2 with no fitted model, 2 independently RW-fit) collapsed into this single study row; recommend splitting upstream.",,,pending
 a0a10385d71888bda_s1,a0a10385d71888bda,Decker et al. (2015),2015,YES,Learning from advice / instructed learning vs. experiential reward learning,,,,,,,pending
 a0a3915bf66efa3e5_s1,a0a3915bf66efa3e5,Buritica et al. (2019),2019,YES,Learning from advice,,,,,,,pending
 a0af831aedaa9655c_s1,a0af831aedaa9655c,Rosler et al. (2025),2025,YES,Moral stereotype learning,,,,,,,pending
@@ -47,7 +47,7 @@ a0dbe04cafc314aa9_s1,a0dbe04cafc314aa9,Sul et al. (2015),2015,YES,Prosocial lear
 a0f14a5ff011d1dc8_s1,a0f14a5ff011d1dc8,Feng et al. (2020),2020,YES,"Self-regarding reinforcement learning dysfunctions in depression, addiction",,,,,,,pending
 a0f14a5ff011d1dc8_s2,a0f14a5ff011d1dc8,Feng et al. (2020),2020,YES,Other-regarding reinforcement learning in PTSD,,,,,,,pending
 a0f14a5ff011d1dc8_s3,a0f14a5ff011d1dc8,Feng et al. (2020),2020,YES,Effects of oxytocin on self- and other-regarding reinforcement learning in,,,,,,,pending
-a0f2e0862f7be225c_s1,a0f2e0862f7be225c,Charpentier et al. (2020),2020,YES,Observational learning; arbitration between choice imitation and goal emulation,,,,,,,pending
+a0f2e0862f7be225c_s1,a0f2e0862f7be225c,Charpentier et al. (2020),2020,YES,Observational learning; arbitration between choice imitation and goal emulation,,,,"[TF-pass 2026-07-16] Structural: full text describes 2 preregistered studies (Study 1 N=30, Study 2 replication N=30) collapsed into this single study row; recommend splitting upstream.",,,pending
 a10a4b2c7e36e888a_s1,a10a4b2c7e36e888a,Zhao et al. (2023),2023,YES,Observational learning of delayed gratification,,,,,,,pending
 a119de5d9eabacce5_s1,a119de5d9eabacce5,Rhoads et al. (2025),2025,YES,Joint outcome learning / prosocial and antisocial learning,,,,,,,pending
 a11b7372abc90e41c_s1,a11b7372abc90e41c,King-Casas et al. (2005),2005,YES,Trust learning / reputation learning,,,,,,,pending
@@ -55,9 +55,9 @@ a14d9513d093ee897_s1,a14d9513d093ee897,Molins et al. (2025),2025,YES,Decision-ma
 a161e0ddcef2f9a88_s1,a161e0ddcef2f9a88,Schmid & Braun (2025),2025,YES,Joint action learning / intergroup sensorimotor coordination / division of,,,,,,,pending
 a18b63d00c750fecf_s1,a18b63d00c750fecf,Levorsen et al. (2021),2021,YES,Social conformity,,,,,,,pending
 a19d005cbfacf5616_s1,a19d005cbfacf5616,Thomas et al. (2022),2022,YES,Social influence / contagion of value preferences,,,,,,,pending
-a1a5092dd3224df6e_s1,a1a5092dd3224df6e,Turner et al. (2025),2025,YES,Reward learning and habit formation on social media (Twitter/X),,,,,,,pending
+a1a5092dd3224df6e_s1,a1a5092dd3224df6e,Turner et al. (2025),2025,YES,Reward learning and habit formation on social media (Twitter/X),,,,"[TF-pass 2026-07-16] Data hygiene: the papers/ folder's file labeled as this paper's supplement actually contains Lindström et al.'s supplement content (mislabeled filename). Does not block extraction since this paper's own supplement is embedded in its main .txt, but the file should be renamed/fixed.",,,pending
 a1a7bf1b4dc8e94bb_s1,a1a7bf1b4dc8e94bb,Moutoussis et al. (2016),2016,YES,Social influence learning / preference learning under social influence,,,,,,,pending
-a1b6b5214ee0f278c_s1,a1b6b5214ee0f278c,Diaconescu et al. (2017),2017,YES,Social learning from advice,,,,,,,pending
+a1b6b5214ee0f278c_s1,a1b6b5214ee0f278c,Diaconescu et al. (2017),2017,YES,Social learning from advice,,,,"[TF-pass 2026-07-16] Structural: manifest context notes ""N=82 total across two studies (N=35 study 1, N=47 study 2)"" — appears to be 2 distinct studies collapsed into this single study row; recommend splitting upstream.",,,pending
 a1b888b8698de3495_s1,a1b888b8698de3495,Pisauro et al. (2022),2022,YES,Cooperation-competition trade-off learning,,,,,,,pending
 a1bc018f207c35dac_s1,a1bc018f207c35dac,Yu & Ballard (2007),2007,YES,Word learning / cross-situational word-referent mapping with social cues,,,,,,,pending
 a1bfd75a72ec23693_s1,a1bfd75a72ec23693,Kuroda et al. (2022),2022,YES,Norm learning / social influence learning,,,,,,,pending
@@ -231,7 +231,7 @@ a89810dc3e613b00c_s4,a89810dc3e613b00c,Schultner et al. (2024),2024,YES,Testing 
 a89810dc3e613b00c_s5,a89810dc3e613b00c,Schultner et al. (2024),2024,YES,Testing whether a human demonstrator is necessary for observational bias,,,,,,,pending
 a89810dc3e613b00c_s6,a89810dc3e613b00c,Schultner et al. (2024),2024,YES,Effect of perceived demonstrator competence on observational bias transmission,,,,,,,pending
 a8996ce4e0b44ae3c_s1,a8996ce4e0b44ae3c,Siegel et al. (2020),2020,YES,Moral inference / moral character learning,,,,,,,pending
-a89991d8ca0b50e35_s1,a89991d8ca0b50e35,Jiang et al. (2025),2025,YES,Trust learning · partner selection learning,,,,,,,pending
+a89991d8ca0b50e35_s1,a89991d8ca0b50e35,Jiang et al. (2025),2025,YES,Trust learning · partner selection learning,,,,[TF-pass 2026-07-16] Structural: full text describes 3 sequential sub-studies collapsed into this single study row; recommend splitting upstream.,,,pending
 a89f6aeb837399ffe_s1,a89f6aeb837399ffe,Westhoff et al. (2021),2021,YES,Prosocial learning,,,,,,,pending
 a89fcd76a5ec248ed_s1,a89fcd76a5ec248ed,Brazil (2013),2013,YES,Social information use during associative learning,,,,,,,pending
 a8a76a4289879e5d9_s1,a8a76a4289879e5d9,Spiering et al. (2025),2025,YES,Social credit assignment / controllability inference in cooperative interactions,,,,,,,pending
@@ -269,7 +269,7 @@ a95eb220fdbe63dcd_s1,a95eb220fdbe63dcd,Bang et al. (2017),2017,YES,Social influe
 a95ecd2364102e984_s1,a95ecd2364102e984,Nong et al. (2024),2024,YES,Mentalizing learning / learning to adapt to fluctuating cooperative vs,,,,,,,pending
 a95f701fd9e24ed4f_s1,a95f701fd9e24ed4f,Hackel & Zaki (2018),2018,YES,Reciprocity learning,,,,,,,pending
 a95f701fd9e24ed4f_s2,a95f701fd9e24ed4f,Hackel & Zaki (2018),2018,YES,Reputation learning,,,,,,,pending
-a96ed8bf28c49c43c_s1,a96ed8bf28c49c43c,Wu et al. (2024),2024,YES,Cooperation learning,,,,,,,pending
+a96ed8bf28c49c43c_s1,a96ed8bf28c49c43c,Wu et al. (2024),2024,YES,Cooperation learning,,,,"[TF-pass 2026-07-16] Data hygiene: papers/ only has an English structured abstract of this Chinese-language Acta Psychologica Sinica article (Wu, Fu, Zhang & Bao 2024), not the full Chinese text. Coded best-effort from the abstract; would benefit from sourcing the original Chinese full text.",,,pending
 a972fcd80ff0bfd61_s1,a972fcd80ff0bfd61,Wang et al. (2023),2023,YES,Prosocial learning,,,,,,,pending
 a9762e050e082aeee_s1,a9762e050e082aeee,Rossi-Goldthorpe et al. (2021),2021,YES,Self-deception learning,,,,,,,pending
 a9848c84183aa4aea_s1,a9848c84183aa4aea,Chen & Krajbich (2017),2017,YES,Epiphany learning,,,,,,,pending
@@ -302,11 +302,11 @@ aa57d04b1f68bf618_s1,aa57d04b1f68bf618,Teo et al. (2022),2022,YES,Observational 
 aa6091f9cc6c693f0_s1,aa6091f9cc6c693f0,Lin et al. (2012),2012,YES,Social reward learning,,,,,,,pending
 aa65ca8c435e94942_s1,aa65ca8c435e94942,Ereira et al. (2018),2018,YES,Mentalizing learning / self-other distinction during belief updating,,,,,,,pending
 aa71946e6c9f86d56_s1,aa71946e6c9f86d56,Efferson et al. (2008),2008,YES,Conformity / frequency-dependent social learning,,,,,,,pending
-aa792de35f80feb74_s1,aa792de35f80feb74,Burke et al. (2016),2016,YES,Observational learning,,,,,,,pending
+aa792de35f80feb74_s1,aa792de35f80feb74,Burke et al. (2016),2016,YES,Observational learning,,,,"[TF-pass 2026-07-16] TF_model_class_std corrected from Q_learning to RW during the task-features pass, cross-checked against the master CSV’s model_family field.",,,pending
 aa7a0276ada8cc7db_s1,aa7a0276ada8cc7db,Cui (2021),,NO,Social competitive behavior in depression,,,,,,,pending
 aa7a0276ada8cc7db_s2,aa7a0276ada8cc7db,Cui (2021),,NO,Social competitive behavior in combat-related PTSD,,,,,,,pending
 aa7a0276ada8cc7db_s3,aa7a0276ada8cc7db,Cui (2021),,NO,Social learning adaptation to environmental volatility in borderline,,,,,,,pending
-aa7d5ff60fbdb2268_s1,aa7d5ff60fbdb2268,Bos et al. (2013),2013,YES,Competition learning / social preference learning in auctions,,,,,,,pending
+aa7d5ff60fbdb2268_s1,aa7d5ff60fbdb2268,Bos et al. (2013),2013,YES,Competition learning / social preference learning in auctions,,,,"[TF-pass 2026-07-16] TF_model_class_std corrected from Q_learning to RW during the task-features pass, cross-checked against the master CSV’s model_family field.",,,pending
 aa81b9b0bc29c1c9b_s1,aa81b9b0bc29c1c9b,Castanon et al. (2023),2023,YES,Prosocial learning / cooperation learning -- how social expectations (empirical,,,,,,,pending
 aa8995e72ac240a9d_s1,aa8995e72ac240a9d,Colombo (2012),2012,YES,Norm learning; social reward effects on learning social norms of tipping,,,,,,,pending
 aa975564adbb29669_s1,aa975564adbb29669,Siegel et al. (2018),2018,YES,Moral inference / trait learning -- asymmetric Bayesian updating of beliefs,,,,,,,pending
