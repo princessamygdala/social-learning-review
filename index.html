@@ -1166,6 +1166,7 @@ or year. Free-text search runs across the citation and study focus.
           <span class="pill" data-ctx="ctx_joint_setting">joint setting</span>
         </div></details>
         <details class="filter-dd"><summary><span class="filter-name">Social specificity (study focus)</span><span class="filter-counter" data-counter="spec_locus"></span></summary><div class="filter-dd-body"><span id="filter-spec-locus"></span></div></details>
+        <details class="filter-dd"><summary><span class="filter-name">Learning goal</span><span class="filter-counter" data-counter="tf_goal"></span></summary><div class="filter-dd-body"><span id="filter-tf-goal"></span></div></details>
       </div>
     </div>
 
@@ -1176,6 +1177,7 @@ or year. Free-text search runs across the citation and study focus.
         <details class="filter-dd"><summary><span class="filter-name">Model family</span><span class="filter-counter" data-counter="model"></span></summary><div class="filter-dd-body"><span id="filter-model"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Model-based / model-free</span><span class="filter-counter" data-counter="mbmf"></span></summary><div class="filter-dd-body"><span id="filter-mbmf"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Social specificity (model)</span><span class="filter-counter" data-counter="spec_depth"></span></summary><div class="filter-dd-body"><span id="filter-spec-depth"></span></div></details>
+        <details class="filter-dd"><summary><span class="filter-name">Model components</span><span class="filter-counter" data-counter="tf_comp"></span></summary><div class="filter-dd-body"><span id="filter-tf-comp"></span></div></details>
       </div>
     </div>
 
@@ -1194,6 +1196,9 @@ or year. Free-text search runs across the citation and study focus.
         <details class="filter-dd"><summary><span class="filter-name">Task paradigm</span><span class="filter-counter" data-counter="task_paradigm"></span></summary><div class="filter-dd-body"><span id="filter-task-paradigm"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Players</span><span class="filter-counter" data-counter="players"></span></summary><div class="filter-dd-body"><span id="filter-players"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Agent constellation</span><span class="filter-counter" data-counter="constellation"></span></summary><div class="filter-dd-body"><span id="filter-constellation"></span></div></details>
+        <details class="filter-dd"><summary><span class="filter-name">Agent type</span><span class="filter-counter" data-counter="tf_agent_type"></span></summary><div class="filter-dd-body"><span id="filter-tf-agent-type"></span></div></details>
+        <details class="filter-dd"><summary><span class="filter-name">Social framing</span><span class="filter-counter" data-counter="tf_framing"></span></summary><div class="filter-dd-body"><span id="filter-tf-framing"></span></div></details>
+        <details class="filter-dd"><summary><span class="filter-name">Relational / joint features</span><span class="filter-counter" data-counter="tf_relational"></span></summary><div class="filter-dd-body"><span id="filter-tf-relational"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Partner type</span><span class="filter-counter" data-counter="partner"></span></summary><div class="filter-dd-body"><span id="filter-partner"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Outcome</span><span class="filter-counter" data-counter="outcome"></span></summary><div class="filter-dd-body"><span id="filter-outcome"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Field of study</span><span class="filter-counter" data-counter="field"></span></summary><div class="filter-dd-body"><span id="filter-field"></span></div></details>
@@ -1264,6 +1269,8 @@ re-arrange. Clicking a study filters the Papers tab to it.
       <option value="source_content">Source content</option>
       <option value="target_content">Target content</option>
       <option value="agent_constellation">Agent constellation</option>
+      <option value="TF_players_agent_type">Agent type (TF)</option>
+      <option value="TF_framing">Social framing (TF)</option>
     </optgroup>
     <optgroup label="Definitions">
       <option value="def_category">Definition of social learning</option>
@@ -2349,6 +2356,11 @@ const FILTER_STATE = {
   spec_neural: new Set(),  // neural specificity: shared / dedicated / dissociated
   spec_locus: new Set(),   // tuning locus: source / target / context (substring match)
   ctx: new Set(),
+  tf_goal: new Set(),        // TF_goal_* columns (multi-label): computational problem being solved
+  tf_relational: new Set(),  // TF_relational_* columns (multi-label): joint/relational task features
+  tf_comp: new Set(),        // TF_comp_* columns (multi-label): components implemented in the winning model
+  tf_framing: new Set(),     // TF_framing value: live_partner / described_hypothetical / computer_algorithmic / recorded_playback
+  tf_agent_type: new Set(),  // TF_players_agent_type value: human / computer_algorithmic / mixed / simulated_agent
   yearMin: null,
   yearMax: null,
   search: '',
@@ -2540,6 +2552,51 @@ function initFilters() {
   buildPillRow('filter-mbmf', ['Model-based', 'Model-free', 'Hybrid (MB/MF)', 'N/A'], 'mbmf');
   buildPillRow('filter-constellation', ['Individual', 'Dyadic-observation', 'Dyadic-interactive', 'Cascade', 'Group', 'Network', 'Social structure/hierarchy'], 'constellation');
   buildSearchFieldsChecklist();
+
+  // Task-features (TF_) pills — from the full-corpus task-features extraction pass
+  const TF_GOAL_LABELS = {
+    TF_goal_prediction: 'Prediction',
+    TF_goal_inference: 'Inference',
+    TF_goal_simulation_planning: 'Simulation / planning',
+    TF_goal_evaluation: 'Evaluation',
+    TF_goal_rule_acquisition: 'Rule acquisition',
+    TF_goal_action_policy: 'Action / policy selection',
+  };
+  const TF_COMP_LABELS = {
+    TF_comp_belief_update: 'Belief update',
+    TF_comp_policy_selection: 'Policy selection',
+    TF_comp_reward_function: 'Reward function',
+    TF_comp_prediction_error: 'Prediction error',
+    TF_comp_ToM: 'Theory-of-mind term',
+    TF_comp_social_value: 'Social-value term',
+    TF_comp_norm: 'Norm term',
+    TF_comp_other: 'Other component',
+  };
+  const TF_RELATIONAL_LABELS = {
+    TF_relational_joint_action_policy: 'Joint action/policy',
+    TF_relational_joint_outcome: 'Joint outcome',
+    TF_relational_interdependence: 'Interdependence (game-theoretic)',
+    TF_relational_joint_state: 'Joint/shared state',
+    TF_relational_joint_attribute: 'Joint attribute',
+  };
+  buildTaxPills('filter-tf-goal', TF_GOAL_LABELS, 'tf_goal');
+  buildTaxPills('filter-tf-comp', TF_COMP_LABELS, 'tf_comp');
+  buildTaxPills('filter-tf-relational', TF_RELATIONAL_LABELS, 'tf_relational');
+
+  const TF_FRAMING_LABELS = {
+    live_partner: 'Live partner',
+    described_hypothetical: 'Described / hypothetical',
+    computer_algorithmic: 'Computer / algorithmic',
+    recorded_playback: 'Recorded playback',
+  };
+  const TF_AGENT_TYPE_LABELS = {
+    human: 'Human',
+    computer_algorithmic: 'Computer / algorithmic',
+    mixed: 'Mixed',
+    simulated_agent: 'Simulated agent (ABM)',
+  };
+  buildLabeledPillRow('filter-tf-framing', TF_FRAMING_LABELS, 'tf_framing', 'TF_framing');
+  buildLabeledPillRow('filter-tf-agent-type', TF_AGENT_TYPE_LABELS, 'tf_agent_type', 'TF_players_agent_type');
 
   // Method pills — 4 canonical categories
   buildPillRow('filter-method', ['Behavioural only', 'fMRI', 'Both fMRI + behavioural', 'Neural (non-fMRI)'], 'method');
@@ -2819,6 +2876,30 @@ function buildPillRow(containerId, items, key) {
   });
 }
 
+// Like buildPillRow, but the pill text is a human-readable label while the value
+// stored in FILTER_STATE (and matched against s[sourceField]) is the raw field
+// value. Skips values with zero studies in the current study space. sourceField
+// is the scalar field on each study to filter against (e.g. 'TF_framing').
+function buildLabeledPillRow(containerId, labelsMap, key, sourceField) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  c.innerHTML = '';
+  Object.keys(labelsMap).forEach(value => {
+    const count = STUDIES.filter(s => s[sourceField] === value).length;
+    if (count === 0) return;
+    const p = document.createElement('span');
+    p.className = 'pill';
+    p.textContent = `${labelsMap[value]} (${count})`;
+    p.addEventListener('click', () => {
+      const set = FILTER_STATE[key];
+      if (set.has(value)) { set.delete(value); p.classList.remove('active'); }
+      else { set.add(value); p.classList.add('active'); }
+      renderStudies();
+    });
+    c.appendChild(p);
+  });
+}
+
 // Checklist controlling which fields the free-text search box matches against
 // (all on by default = identical to the old fixed-haystack behavior). Multiple
 // can be picked at once, e.g. Author + Title together.
@@ -2940,6 +3021,17 @@ function passesFilters(s) {
   if (FILTER_STATE.tax_domain.size > 0) {
     if (![...FILTER_STATE.tax_domain].some(col => s[col] === 1)) return false;
   }
+  if (FILTER_STATE.tf_goal.size > 0) {
+    if (![...FILTER_STATE.tf_goal].some(col => s[col] === 1)) return false;
+  }
+  if (FILTER_STATE.tf_relational.size > 0) {
+    if (![...FILTER_STATE.tf_relational].some(col => s[col] === 1)) return false;
+  }
+  if (FILTER_STATE.tf_comp.size > 0) {
+    if (![...FILTER_STATE.tf_comp].some(col => s[col] === 1)) return false;
+  }
+  if (FILTER_STATE.tf_framing.size > 0 && !FILTER_STATE.tf_framing.has(s.TF_framing)) return false;
+  if (FILTER_STATE.tf_agent_type.size > 0 && !FILTER_STATE.tf_agent_type.has(s.TF_players_agent_type)) return false;
   for (const c of FILTER_STATE.ctx) {
     if (s[c] !== 'yes') return false;
   }
@@ -3188,7 +3280,8 @@ function renderStudies() {
     FILTER_STATE.model.size + FILTER_STATE.mbmf.size + FILTER_STATE.constellation.size + FILTER_STATE.method.size + FILTER_STATE.flags.size +
     FILTER_STATE.field.size + FILTER_STATE.players.size + FILTER_STATE.partner.size +
     FILTER_STATE.outcome.size + FILTER_STATE.task_paradigm.size + FILTER_STATE.source_content.size + FILTER_STATE.target_content.size + FILTER_STATE.population.size + FILTER_STATE.topic_v2.size + FILTER_STATE.ctx.size +
-    FILTER_STATE.tax_topic.size + FILTER_STATE.tax_pop.size + FILTER_STATE.tax_mod.size + FILTER_STATE.tax_domain.size + FILTER_STATE.tax_popclass.size > 0
+    FILTER_STATE.tax_topic.size + FILTER_STATE.tax_pop.size + FILTER_STATE.tax_mod.size + FILTER_STATE.tax_domain.size + FILTER_STATE.tax_popclass.size +
+    FILTER_STATE.tf_goal.size + FILTER_STATE.tf_relational.size + FILTER_STATE.tf_comp.size + FILTER_STATE.tf_framing.size + FILTER_STATE.tf_agent_type.size > 0
     || FILTER_STATE.search || FILTER_STATE.yearMin !== null || FILTER_STATE.yearMax !== null
     || FILTER_STATE.cellSource !== null;
   document.getElementById('filter-row-active').style.display = anyActive ? 'flex' : 'none';
@@ -3979,6 +4072,8 @@ function netRender() {
     op_category: 'Operationalization (task type)',
     mbmf_class: 'Model-based / model-free / hybrid',
     agent_constellation: 'Agent constellation',
+    TF_players_agent_type: 'Agent type (TF)',
+    TF_framing: 'Social framing (TF)',
   }[groupKey] || groupKey;
   legend.innerHTML = `<strong>${legendTitle}</strong><br>` +
     groups.map(g => `<div class="legend-row" data-group="${escapeHtml(String(g))}" style="display:flex;align-items:center;gap:0.4rem;margin-top:0.2rem;cursor:pointer;padding:1px 3px;border-radius:3px;">
