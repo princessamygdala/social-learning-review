@@ -393,6 +393,10 @@ footer { padding: 2rem; text-align: center; color: var(--text-muted); font-size:
 .hist-cell-panel .axis-lbl { color: var(--text-muted); font-size: 0.65rem; padding: 1px 2px !important; }
 
 
+
+.howto { margin: 0.6rem 0 1.4rem; padding: 0.7rem 0.9rem; border-left: 3px solid var(--border);
+         background: rgba(0,0,0,0.02); font-size: 0.92em; color: var(--text-muted); border-radius: 3px; }
+.howto b { color: var(--text); }
 .pill.maps-tab.active { background: var(--deep-green); color: white; border-color: var(--deep-green-dark); }
 .so-badge { display:inline-block; color:#fff; font-size:0.66rem; padding:0.05rem 0.35rem; border-radius:0.5rem; vertical-align:middle; }
 .pill.tasks-view.active { background: var(--deep-green); color: white; border-color: var(--deep-green-dark); }
@@ -1167,6 +1171,7 @@ or year. Free-text search runs across the citation and study focus.
         </div></details>
         <details class="filter-dd"><summary><span class="filter-name">Social specificity (study focus)</span><span class="filter-counter" data-counter="spec_locus"></span></summary><div class="filter-dd-body"><span id="filter-spec-locus"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Learning goal</span><span class="filter-counter" data-counter="tf_goal"></span></summary><div class="filter-dd-body"><span id="filter-tf-goal"></span></div></details>
+        <div class="howto" style="grid-column:1/-1;margin:0.2rem 0 0.6rem;"><b>On the topic tree.</b> This is one possible way to organize the literature, not the only one. Topics are multi-coded, so a study appears under every label that applies and the counts do not sum to the study total. Labels keep the field's own vocabulary even where a term names a process rather than a subject matter.</div>
         <details class="filter-dd"><summary><span class="filter-name">Topic (v4, broad)</span><span class="filter-counter" data-counter="v4_broad"></span></summary><div class="filter-dd-body" style="max-height:260px;overflow-y:auto;"><span id="filter-v4-broad"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Topic (v4, mid)</span><span class="filter-counter" data-counter="v4_mid"></span></summary><div class="filter-dd-body" style="max-height:300px;overflow-y:auto;"><span id="filter-v4-mid"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Agent goal</span><span class="filter-counter" data-counter="v4_goal"></span></summary><div class="filter-dd-body"><span id="filter-v4-goal"></span></div></details>
@@ -1238,7 +1243,7 @@ or year. Free-text search runs across the citation and study focus.
 Several interactive ways to look at the study space. Pick a sub-tab below.
 </p>
 <div class="filter-bar" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
-  <span class="pill maps-tab active" data-mtab="network">Study network</span>
+  <span class="pill maps-tab active" data-mtab="network">Studies by attribute</span>
   <span class="pill maps-tab" data-mtab="brain">Brain map</span>
   <span class="pill maps-tab" data-mtab="time">Timeline</span>
   <span class="pill maps-tab" data-mtab="tasks">Task paradigms</span>
@@ -1246,8 +1251,12 @@ Several interactive ways to look at the study space. Pick a sub-tab below.
   <span class="pill maps-tab" data-mtab="frontier">Research frontier</span>
 </div>
 <div class="maps-pane" id="maps-pane-network">
+<div class="howto"><b>How to read this.</b> Each dot is a study, positioned by similarity on the
+attribute you choose, not by any underlying measurement. Distance between clusters is not
+meaningful; only membership is. A study can carry several values on most attributes, so it sits
+where its combination puts it rather than in one group.</div>
 <p class="prose">
-Each dot is one study (n=484). Dots cluster by the attribute you pick below;
+Each dot is one study (n=508). Dots cluster by the attribute you pick below;
 hover any dot to see its citation, topic, and source &rarr; target. Drag to
 re-arrange. Clicking a study filters the Papers tab to it.
 </p>
@@ -1384,6 +1393,10 @@ most follow-up work. Click a row to open it in the Papers tab.
 </div><!--/maps-pane-time-->
 
 <div class="maps-pane" id="maps-pane-tasks" style="display:none;">
+<div class="howto"><b>How to read this.</b> Paradigm names conflate three things: what the task is,
+how information reaches the learner, and who the other party is. A third of all studies share one
+structure (repeated choice with probabilistic feedback) under sixteen different names. Where
+available, the structure, modality and schedule axes separate these.</div>
 <h2 style="margin-top: 0;">Task paradigm heatmaps</h2>
 <p class="prose" style="color: var(--text-muted);">
 Pick a view to slice the study space by task paradigm or framework cell against
@@ -1418,6 +1431,10 @@ intersection. Hover for raw counts; click to filter the Papers tab.
 </div><!--/maps-pane-tasks-->
 
 <div class="maps-pane" id="maps-pane-brain" style="display:none;">
+<div class="howto"><b>How to read this.</b> Regions are peak coordinates reported by the original
+papers, not a meta-analytic result. About a third of studies here report neural data and a third of
+those do not report peaks at all, so absence of a region means it was not reported, not that it was
+not involved. Treat this as a map of what the literature has looked at.</div>
 
 <p class="prose">
 3D glass brain rendered with nilearn. Each dot is one reported peak
@@ -1481,6 +1498,9 @@ not the authors' original region labels.
 </div><!--/maps-pane-brain-->
 
 <div class="maps-pane" id="maps-pane-models" style="display:none;">
+<div class="howto"><b>How to read this.</b> Counts are of models that <em>won</em> a comparison in
+their paper, so they reflect what was tested as well as what fit. Rescorla-Wagner dominates partly
+because it is most often the model compared against.</div>
 <h2 style="margin-top: 0;">Models &amp; parameters</h2>
 <p class="prose" style="color: var(--text-muted);">
 How the study space models social learning: the model families in use, how they
@@ -1707,8 +1727,11 @@ above), then click any question to open the paper that raised it.
 </div><!--/maps-pane-frontier-->
 
 <div class="maps-pane" id="maps-pane-atlas" style="display:none;">
+<div class="howto"><b>How to read this.</b> Links are shared tags, so two studies can be close here
+while asking quite different questions. Shared tags indicate overlapping description, not
+replication.</div>
 <hr style="margin:2.4rem 0 1.4rem;border:none;border-top:1px solid var(--border);">
-<h2 style="margin-top: 0;">How studies relate to each other</h2>
+<h2 style="margin-top: 0;">Study network: how studies relate to each other</h2>
 <p class="prose" style="color: var(--text-muted);">
 The network above clusters studies by one attribute; this section instead links them
 by <em>shared tags</em>. Pick a study to rank every other by how many tags they share
