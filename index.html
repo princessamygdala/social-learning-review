@@ -1297,6 +1297,7 @@ re-arrange. Clicking a study filters the Papers tab to it.
     <optgroup label="Topic">
       <option value="v4_broad" selected>Topic: broad group</option>
       <option value="v4_mid">Topic: mid level</option>
+      <option value="v4_narrow">Topic: narrow level</option>
     </optgroup>
     <optgroup label="Population">
       <option value="population_category">Population</option>
@@ -1309,16 +1310,15 @@ re-arrange. Clicking a study filters the Papers tab to it.
     </optgroup>
     <optgroup label="Algorithm">
       <option value="model_family">Model family</option>
-      <option value="mbmf_class">Model-based / model-free / hybrid</option>
+      <option value="model_mb_mf">Model-based / model-free / hybrid</option>
     </optgroup>
     <optgroup label="Source / target / context">
       <option value="primary_source">Source type</option>
       <option value="primary_target">Target type</option>
       <option value="source_content">Source content</option>
       <option value="target_content">Target content</option>
-      <option value="agent_constellation">Agent constellation</option>
-      <option value="TF_players_agent_type">Agent type (TF)</option>
-      <option value="TF_framing">Social framing (TF)</option>
+      <option value="v4_agent_constellation">Agent constellation</option>
+      <option value="SF_primary">Social framing</option>
     </optgroup>
     <optgroup label="Definitions">
       <option value="def_category">Definition of social learning</option>
@@ -1334,7 +1334,7 @@ re-arrange. Clicking a study filters the Papers tab to it.
       <option value="task_paradigm">Task paradigm</option>
       <option value="outcome_modality">Outcome</option>
       <option value="n_players">Players</option>
-      <option value="primary_limitation">Limitation</option>
+      <option value="limitation_first">Limitation</option>
       <option value="primary_field">Field of study</option>
     </optgroup>
   </select>
@@ -4291,8 +4291,8 @@ const NET_TAX_DOMAIN_ORDER = [
 // list, fall back to splitting the string, and take the first label: the network draws one
 // dot per study so it needs a single group, and the coding pass writes the primary label first.
 function v4First(s, level) {
-  const listKey = level === 'broad' ? 'v4_topic_broad_list' : 'v4_topic_mid_list';
-  const strKey  = level === 'broad' ? 'v4_topic_broad'      : 'v4_topic_mid';
+  const listKey = 'v4_topic_' + level + '_list';
+  const strKey  = 'v4_topic_' + level;
   let v = s[listKey];
   if (!Array.isArray(v)) v = String(s[strKey] || '').split(';');
   const first = (v[0] || '').trim();
@@ -4305,7 +4305,7 @@ function v4First(s, level) {
 // reads as 25 when 62 studies are coded with it. Return the match-any total so the legend can
 // show both. Returns null for keys that are not multi-coded, where the two are the same number.
 function netTotalCounts(groupKey, subset) {
-  const field = { v4_broad: 'v4_topic_broad', v4_mid: 'v4_topic_mid' }[groupKey];
+  const field = { v4_broad: 'v4_topic_broad', v4_mid: 'v4_topic_mid', v4_narrow: 'v4_topic_narrow' }[groupKey];
   if (!field) return null;
   const totals = {};
   for (const s of subset) {
@@ -4362,6 +4362,14 @@ function netRender() {
   function nodeGroup(s) {
     if (groupKey === 'v4_broad') return v4First(s, 'broad');
     if (groupKey === 'v4_mid')   return v4First(s, 'mid');
+    if (groupKey === 'v4_narrow') return v4First(s, 'narrow');
+    if (groupKey === 'limitation_first') {
+      // primary_limitation was coded for only 359 studies; limitations_categorized covers 504.
+      // Take its first clause, which the coders wrote most-important-first.
+      let v = String(s.limitations_categorized || '').split(';')[0].trim().toLowerCase();
+      v = v.replace(/\.$/, '').replace(/^(the|a)\s+/, '');
+      return v || 'not reported';
+    }
     if (groupKey === 'tax_domain') return netTaxGroup(s, NET_TAX_DOMAIN_ORDER);
     if (groupKey === 'tax_topic') return netTaxGroup(s, NET_TAX_TOPIC_ORDER);
     if (groupKey === 'tax_popclass') return netTaxGroup(s, NET_TAX_POPCLASS_ORDER);
@@ -4415,6 +4423,9 @@ function netRender() {
     TF_framing: 'Social framing (TF)',
     v4_broad: 'Topic (broad)',
     v4_mid: 'Topic (mid level)',
+    v4_narrow: 'Topic (narrow level)',
+    v4_agent_constellation: 'Agent constellation', SF_primary: 'Social framing',
+    model_mb_mf: 'Model-based / model-free', limitation_first: 'Limitation',
     population_category: 'Population',
     TP_structure: 'Task structure', TP_modality: 'Task modality',
     v4_setting: 'Setting', v4_partner_type: 'Partner type',
@@ -7253,6 +7264,7 @@ function renderFrontierQuestions() {
 const ATLAS_DIMS = [
   { key: 'topic',   list: 'v4_topic_mid',    label: 'Topic',    color: '#2E7E63' },
   { key: 'domain',  list: 'v4_topic_broad',  label: 'Topic (broad)', color: '#A8553A' },
+  { key: 'narrow',  list: 'v4_topic_narrow', label: 'Topic (narrow)', color: '#2E6E7E' },
   { key: 'pop',     single: 'population_category', label: 'Population', color: '#B07A2A' },
   { key: 'mod',     single: 'TP_modality',   label: 'Task modality', color: '#7F77DD' },
   { key: 'model',   single: 'model_family',  label: 'Model family', color: '#3A7E8A' },
@@ -7266,7 +7278,7 @@ const ATLAS_DIMS = [
   { key: 'region',  prefix: null,            label: 'Brain region', color: '#C9573F' },
   { key: 'keywords',prefix: null,            label: 'Keywords', color: '#5A8F3C' },
 ];
-let ATLAS_STATE = { focus: null, dims: new Set(['topic', 'pop', 'mod', 'model', 'domain', 'channel', 'region', 'keywords']) };
+let ATLAS_STATE = { focus: null, dims: new Set(['topic', 'narrow', 'pop', 'mod', 'model', 'domain', 'channel', 'region', 'keywords']) };
 let ATLAS_TAGSETS = null;
 
 // study_id -> [canonical brain region names], built from BRAIN_REGIONS (25 named
