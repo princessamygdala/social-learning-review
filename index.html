@@ -1179,6 +1179,12 @@ or year. Free-text search runs across the citation and study focus.
         <details class="filter-dd"><summary><span class="filter-name">Social specificity (study focus)</span><span class="filter-counter" data-counter="spec_locus"></span></summary><div class="filter-dd-body"><span id="filter-spec-locus"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Learning goal</span><span class="filter-counter" data-counter="tf_goal"></span></summary><div class="filter-dd-body"><span id="filter-tf-goal"></span></div></details>
         <div class="howto" style="grid-column:1/-1;margin:0.2rem 0 0.6rem;"><b>On the topic tree.</b> This is one possible way to organize the literature, not the only one. Topics are multi-coded, so a study appears under every label that applies and the counts do not sum to the study total. Labels keep the field's own vocabulary even where a term names a process rather than a subject matter.</div>
+        <label class="filter-dd" style="display:flex;align-items:center;gap:0.4rem;padding:0.35rem 0.5rem;font-size:0.9em;"><input type="checkbox" id="hideHealthyBulk"> hide healthy adults and undergraduates</label>
+        <details class="filter-dd"><summary><span class="filter-name">Build your own category</span><span class="filter-counter" data-counter="diy"></span></summary><div class="filter-dd-body">
+          <div style="font-size:0.86em;color:var(--text-muted);margin-bottom:0.4rem;">Type words separated by commas. A study matches if any of them appears in its keywords, topic labels, study focus or task description. Use this when the tree has no node for what you are looking for.</div>
+          <input id="diyInput" type="text" placeholder="e.g. gaze, eye contact, joint attention" style="width:100%;padding:0.4rem 0.5rem;font:inherit;border:1px solid var(--border);border-radius:4px;">
+          <div id="diyCount" style="font-size:0.86em;color:var(--text-muted);margin-top:0.35rem;"></div>
+        </div></details>
         <details class="filter-dd"><summary><span class="filter-name">Topic (v4, broad)</span><span class="filter-counter" data-counter="v4_broad"></span></summary><div class="filter-dd-body" style="max-height:260px;overflow-y:auto;"><span id="filter-v4-broad"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Topic (v4, mid)</span><span class="filter-counter" data-counter="v4_mid"></span></summary><div class="filter-dd-body" style="max-height:300px;overflow-y:auto;"><span id="filter-v4-mid"></span></div></details>
         <details class="filter-dd"><summary><span class="filter-name">Agent goal</span><span class="filter-counter" data-counter="v4_goal"></span></summary><div class="filter-dd-body"><span id="filter-v4-goal"></span></div></details>
@@ -2417,6 +2423,8 @@ const FILTER_STATE = {
   v4_stim: new Set(),        // causal-method narrows under Modulators > Brain stimulation
   brainOnlyNeural: false,    // brain map: hide studies with no neural data
   brainOnlyCoords: false,    // brain map: hide studies that report no peak coordinates
+  hideHealthyBulk: false,    // populations: hide the healthy-adult majority to see the rest
+  diyTerms: [],              // user-defined category: match any term across keywords and text
   yearMin: null,
   yearMax: null,
   search: '',
@@ -3175,6 +3183,8 @@ function countActiveFilters() {
     const v = FILTER_STATE[k];
     if (v instanceof Set) n += v.size;
   }
+  if (FILTER_STATE.diyTerms.length) n += 1;
+  if (FILTER_STATE.hideHealthyBulk) n += 1;
   if (FILTER_STATE.brainOnlyNeural) n += 1;
   if (FILTER_STATE.brainOnlyCoords) n += 1;
   if (FILTER_STATE.search) n += 1;
@@ -3234,6 +3244,16 @@ function passesFilters(s) {
   }
   if (FILTER_STATE.v4_partner.size > 0 && !FILTER_STATE.v4_partner.has(s.v4_partner_type)) return false;
   if (FILTER_STATE.v4_setting.size > 0 && !FILTER_STATE.v4_setting.has(s.v4_setting)) return false;
+  if (FILTER_STATE.diyTerms.length) {
+    const hay = [s.keywords_search, (s.v4_topic_broad_list||[]).join(' '), (s.v4_topic_mid_list||[]).join(' '),
+                 (s.v4_topic_narrow_list||[]).join(' '), s.study_focus, s.task_description, s.task_paradigm]
+                .filter(Boolean).join(' ').toLowerCase();
+    if (!FILTER_STATE.diyTerms.some(t => hay.includes(t))) return false;
+  }
+  if (FILTER_STATE.hideHealthyBulk) {
+    const pop = String(s.population_category || '').toLowerCase();
+    if (pop === 'healthy adults' || pop === 'undergraduates') return false;
+  }
   if (FILTER_STATE.brainOnlyNeural && String(s.has_neural) !== 'TRUE') return false;
   if (FILTER_STATE.brainOnlyCoords && String(s.has_coordinates) !== 'TRUE') return false;
   if (FILTER_STATE.v4_stim.size > 0) {
@@ -4920,7 +4940,25 @@ function renderModelComparisonStats() {
      </p>`;
 }
 
-['brainOnlyNeural','brainOnlyCoords'].forEach(id => {
+(function wireDiy(){
+  const el = document.getElementById('diyInput');
+  if (!el) return;
+  let t = null;
+  el.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      FILTER_STATE.diyTerms = el.value.split(',').map(x => x.trim().toLowerCase()).filter(Boolean);
+      const lab = document.getElementById('diyCount');
+      if (lab) lab.textContent = FILTER_STATE.diyTerms.length
+        ? STUDIES.filter(passesFilters).length + ' studies match'
+        : '';
+      renderStudies();
+      updateFilterCounters();
+    }, 220);
+  });
+})();
+
+['brainOnlyNeural','brainOnlyCoords','hideHealthyBulk'].forEach(id => {
   const el = document.getElementById(id);
   if (!el) return;
   el.addEventListener('change', () => {
