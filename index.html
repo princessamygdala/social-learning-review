@@ -394,6 +394,13 @@ footer { padding: 2rem; text-align: center; color: var(--text-muted); font-size:
 
 
 
+
+.prov { display:inline-block; font-size:0.72em; font-weight:600; letter-spacing:0.03em;
+        padding:0.1em 0.45em; border-radius:3px; margin-left:0.45em; vertical-align:middle;
+        text-transform:uppercase; }
+.prov-author { background:#e8f0e4; color:#33562c; border:1px solid #c4d8bc; }
+.prov-ours   { background:#eceaf4; color:#443a63; border:1px solid #cdc7de; }
+.prov-legend { margin:0.4rem 0 0.9rem; font-size:0.86em; color:var(--text-muted); }
 .howto { margin: 0.6rem 0 1.4rem; padding: 0.7rem 0.9rem; border-left: 3px solid var(--border);
          background: rgba(0,0,0,0.02); font-size: 0.92em; color: var(--text-muted); border-radius: 3px; }
 .howto b { color: var(--text); }
@@ -5277,12 +5284,12 @@ function renderStudyBody(s) {
     <div class="modal-section">
     <h3>Computational level</h3>
     <table class="detail">
-      <tr><th>Study focus</th><td>${cell(s.study_focus)}</td></tr>
-      <tr><th>Research question</th><td>${cell(s.research_question)}</td></tr>
+      <tr><th>Study focus <span class="prov prov-ours" title="Written or categorised for this review">ours</span></th><td>${cell(s.study_focus)}</td></tr>
+      <tr><th>Research question <span class="prov prov-ours" title="Written or categorised for this review">ours</span></th><td>${cell(s.research_question)}</td></tr>
       <tr><th>Task description</th><td>${cell(s.task_description)}</td></tr>
       <tr><th>Players</th><td>${cell(s.players)}</td></tr>
-      ${s.agent_constellation ? `<tr><th>Agent constellation</th><td>${escHtml(s.agent_constellation)}${s.agent_constellation_confidence && s.agent_constellation_confidence !== 'high' ? ` <span style="color:var(--text-muted);font-size:0.85em;">[${escHtml(s.agent_constellation_confidence)} confidence]</span>` : ''}${s.agent_constellation_note ? `<div style="color:var(--text-muted);font-size:0.88em;margin-top:0.2rem;">${escHtml(s.agent_constellation_note)}</div>` : ''}</td></tr>` : ''}
-      ${s.v4_topic_broad ? `<tr><th>Topic (v4)</th><td>${escHtml(s.v4_topic_broad)}${s.v4_topic_mid ? `<div style="color:var(--text-muted);font-size:0.9em;margin-top:0.2rem;">${escHtml(s.v4_topic_mid)}</div>` : ''}${s.v4_topic_confidence && s.v4_topic_confidence !== 'high' ? ` <span style="color:var(--text-muted);font-size:0.85em;">[${escHtml(s.v4_topic_confidence)} confidence]</span>` : ''}</td></tr>` : ''}
+      ${(s.v4_agent_constellation || s.agent_constellation) ? `<tr><th>Agent constellation</th><td><span title="${escHtml(s.agent_constellation_note || '')}">${escHtml(s.v4_agent_constellation || s.agent_constellation)}</span>${s.agent_constellation_confidence && s.agent_constellation_confidence !== 'high' ? ` <span style="color:var(--text-muted);font-size:0.85em;">[${escHtml(s.agent_constellation_confidence)} confidence]</span>` : ''}</td></tr>` : ''}
+      ${s.v4_topic_broad ? `<tr><th>Topic (v4) <span class="prov prov-ours" title="Written or categorised for this review">ours</span></th><td>${escHtml(s.v4_topic_broad)}${s.v4_topic_mid ? `<div style="color:var(--text-muted);font-size:0.9em;margin-top:0.2rem;">${escHtml(s.v4_topic_mid)}</div>` : ''}${s.v4_topic_confidence && s.v4_topic_confidence !== 'high' ? ` <span style="color:var(--text-muted);font-size:0.85em;">[${escHtml(s.v4_topic_confidence)} confidence]</span>` : ''}</td></tr>` : ''}
       ${(() => {
         const G = {v4_goal_prediction:'Prediction', v4_goal_inference:'Inference', v4_goal_evaluation:'Evaluation',
                    v4_goal_action_policy:'Action / policy', v4_goal_simulation_planning:'Simulation / planning',
@@ -5346,6 +5353,7 @@ function renderStudyBody(s) {
   const quality = `
     <div class="modal-section">
     <h3>Study methodology, limitations &amp; future directions</h3>
+    <div class="prov-legend"><span class="prov prov-author" title="Taken from the paper">author</span> taken from the paper. <span class="prov prov-ours" title="Written or categorised for this review">ours</span> written or categorised for this review. Unlabelled rows are extracted fact, such as a sample size or a method.</div>
     <table class="detail">
       ${s.NEW_design ? `<tr><th>Study design</th><td>${escHtml(s.NEW_design)}${s.NEW_manipulation ? ' <span style="color:var(--text-muted);">— ' + escHtml(s.NEW_manipulation) + '</span>' : ''}</td></tr>` : ''}
       ${s.NEW_intervention === 'yes' ? `<tr><th>Intervention</th><td>${escHtml(s.NEW_intervention_type || 'yes')}</td></tr>` : ''}
@@ -5359,8 +5367,8 @@ ${fieldRow}
       ${s.NEW_modeling_role && s.NEW_modeling_role !== 'none' ? `<tr><th>Role of modeling</th><td>${escHtml(s.NEW_modeling_role.replace(/_/g,' / '))}${s.NEW_param_manipulation_link ? ' <span style="color:var(--text-muted);">— ' + escHtml(s.NEW_param_manipulation_link) + '</span>' : ''}</td></tr>` : ''}
       ${paramRows}
       <tr><th>Code / repository</th><td>${(s.code_url||'').match(/^https?:\/\//) ? `<a href="${escHtml(s.code_url)}" target="_blank">${escHtml(s.code_url)}</a>` : '<span class="empty">not reported</span>'}</td></tr>
-      <tr><th>Authors' own limitations</th><td>${bulletCell(s.limitations_reported)}</td></tr>
-      <tr><th>Future directions</th><td>${bulletCell(s.NEW_future_directions_reported)}</td></tr>
+      <tr><th>Limitations <span class="prov prov-author" title="Taken from the paper">author</span></th><td>${bulletCell(s.limitations_reported)}</td></tr>
+      <tr><th>Future directions <span class="prov prov-author" title="Taken from the paper">author</span></th><td>${bulletCell(s.NEW_future_directions_reported)}</td></tr>
     </table>
     </div>
   `;
