@@ -117,3 +117,29 @@ If you buy a domain (e.g. `socialcompreview.org`):
    `socialcompreview.org` to `princessamygdala.github.io`.
 3. Wait 10–60 min for DNS propagation. GitHub will issue a free TLS
    certificate automatically.
+
+
+## Data pipeline (added 2026-08-10)
+
+**The page does NOT fetch `studies.json` at runtime.** It decodes an inline base64 blob,
+`const STUDIES_B64 = "..."`, near the top of `index.html`. Older notes in this file and in
+the page itself say the page "loads from" studies.json; that is wrong and cost a full
+regeneration cycle before it was noticed. Regenerating `studies.json` alone changes nothing
+that a visitor sees.
+
+Run all four steps, in order:
+
+```
+python3 scripts/build_consolidated.py        # master_dataset.csv + frozen legacy archive -> master_consolidated.csv
+python3 scripts/build_studies_json.py --apply # -> social-learning-review-public/studies.json
+python3 scripts/embed_studies_b64.py --apply  # -> rewrites STUDIES_B64 inside index.html
+git -C social-learning-review-public add -A && git -C social-learning-review-public commit && git -C social-learning-review-public push
+```
+
+Both build scripts run as a dry run by default and print a coverage report; run them without
+`--apply` first if the change is not routine.
+
+`data/clean/legacy_studies_json_fields.json` is a frozen archive of the last independently
+authored studies.json. `build_consolidated.py` reads it rather than the live file, because
+the live file is now generated from the consolidated store and reading it would be circular:
+trimming the published file would silently delete columns from the master.
