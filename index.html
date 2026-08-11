@@ -1305,6 +1305,7 @@ re-arrange. Clicking a study filters the Papers tab to it.
     <optgroup label="Task">
       <option value="TP_structure">Task structure</option>
       <option value="TP_modality">Task modality</option>
+      <option value="TP_schedule">Reinforcement schedule</option>
       <option value="v4_setting">Setting</option>
       <option value="v4_partner_type">Partner type</option>
     </optgroup>
@@ -1428,7 +1429,17 @@ most follow-up work. Click a row to open it in the Papers tab.
 how information reaches the learner, and who the other party is. A third of all studies share one
 structure (repeated choice with probabilistic feedback) under sixteen different names. Where
 available, the structure, modality and schedule axes separate these.</div>
-<h2 style="margin-top: 0;">Task paradigm heatmaps</h2>
+<h2 style="margin-top: 0;">The task design space</h2>
+<p class="prose" style="color: var(--text-muted);">
+Every study decomposed onto the three axes a paradigm name conflates. Counts are live from the
+current study set. Modality and schedule are multi-coded, so their columns sum past the total.
+</p>
+<div id="tp-designspace"></div>
+
+<h2 style="margin-top: 2.4rem;">Task paradigm heatmaps</h2>
+<div class="howto" style="margin-top:0.4rem;"><b>Note.</b> The heatmaps below are built from a
+stored snapshot on the older A&ndash;H domain scheme and cover about 384 of the studies, not the
+whole set. The panel above is computed live and covers all of them.</div>
 <p class="prose" style="color: var(--text-muted);">
 Pick a view to slice the study space by task paradigm or framework cell against
 topics, source types, and target types. Cells = N studies in that
@@ -4427,7 +4438,7 @@ function netRender() {
     v4_agent_constellation: 'Agent constellation', SF_primary: 'Social framing',
     model_mb_mf: 'Model-based / model-free', limitation_first: 'Limitation',
     population_category: 'Population',
-    TP_structure: 'Task structure', TP_modality: 'Task modality',
+    TP_structure: 'Task structure', TP_modality: 'Task modality', TP_schedule: 'Reinforcement schedule',
     v4_setting: 'Setting', v4_partner_type: 'Partner type',
   }[groupKey] || groupKey;
   const netTotals = netTotalCounts(NET_STATE.groupKey, subset);   // subset, not nodes: the d3 node objects are slim and carry no topic fields
@@ -4557,6 +4568,90 @@ function initNetwork() {
 // Sub-tab switching for Study Maps
 let TASKS_DATA = null;
 let TASKS_VIEW = 'paradigm_topic';
+
+// ---- Task design space: the three axes a paradigm name conflates -------------------------
+// Computed live from STUDIES, unlike the heatmaps below it, which come from a stored snapshot
+// on the older domain scheme. Modality and schedule are ';'-multi-coded.
+function tpSplit(v) { return String(v || '').split(';').map(x => x.trim()).filter(Boolean); }
+
+function renderTaskDesignSpace() {
+  const el = document.getElementById('tp-designspace');
+  if (!el || typeof STUDIES === 'undefined' || !STUDIES.length) return;
+  const subset = STUDIES.filter(passesFilters);
+  const N = subset.length;
+
+  const tally = (field, multi) => {
+    const c = new Map();
+    for (const s of subset) {
+      const vals = multi ? tpSplit(s[field]) : [String(s[field] || '').trim()];
+      for (const v of vals) { if (v) c.set(v, (c.get(v) || 0) + 1); }
+    }
+    return [...c.entries()].sort((a, b) => b[1] - a[1]);
+  };
+  const AX = [
+    ['Task structure', tally('TP_structure', false), '#6B8F71', 'TP_structure'],
+    ['Information modality', tally('TP_modality', true), '#7F77DD', 'TP_modality'],
+    ['Reinforcement schedule', tally('TP_schedule', true), '#B07A2A', 'TP_schedule'],
+  ];
+  const maxOf = rows => Math.max(1, ...rows.map(r => r[1]));
+
+  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.4rem;">';
+  for (const [label, rows, color] of AX) {
+    html += `<div><div style="font-weight:600;color:var(--teal-dark);margin-bottom:0.4rem;">${label}
+      <span style="font-weight:400;color:var(--text-muted);font-size:0.82rem;">${rows.length} values</span></div>`;
+    const mx = maxOf(rows);
+    for (const [v, n] of rows) {
+      html += `<div style="display:flex;align-items:center;gap:0.5rem;margin:0.16rem 0;font-size:0.84rem;">
+        <div style="flex:1;min-width:0;"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(v)}</div>
+          <div style="height:5px;background:${color};opacity:0.8;border-radius:3px;width:${Math.round(100 * n / mx)}%;"></div></div>
+        <div style="color:var(--text-muted);width:2.6rem;text-align:right;">${n}</div></div>`;
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // structure x modality, the two axes that actually vary together
+  const structs = AX[0][1].map(r => r[0]);
+  const mods = AX[1][1].map(r => r[0]);
+  const cell = {};
+  for (const s of subset) {
+    const st = String(s.TP_structure || '').trim();
+    for (const m of tpSplit(s.TP_modality)) cell[st + '||' + m] = (cell[st + '||' + m] || 0) + 1;
+  }
+  const cmax = Math.max(1, ...Object.values(cell));
+  html += `<h3 style="margin-top:1.8rem;">Structure &times; modality</h3>
+    <div style="overflow-x:auto;"><table style="border-collapse:collapse;font-size:0.8rem;">
+    <tr><td></td>${mods.map(m => `<td style="padding:0.2rem 0.3rem;vertical-align:bottom;">
+      <div style="writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;color:var(--text-muted);">${escHtml(m)}</div></td>`).join('')}</tr>`;
+  for (const st of structs) {
+    html += `<tr><td style="padding:0.15rem 0.5rem 0.15rem 0;white-space:nowrap;">${escHtml(st)}</td>`;
+    for (const m of mods) {
+      const n = cell[st + '||' + m] || 0;
+      const a = n ? (0.12 + 0.88 * n / cmax) : 0;
+      html += `<td title="${escHtml(st)} + ${escHtml(m)}: ${n}" style="width:22px;height:20px;text-align:center;
+        border:1px solid var(--border);background:rgba(46,126,99,${a.toFixed(2)});color:${a > 0.55 ? 'white' : 'var(--text)'};">${n || ''}</td>`;
+    }
+    html += '</tr>';
+  }
+  html += '</table></div>';
+
+  // how much of the space is actually used
+  const triples = new Set();
+  for (const s of subset) {
+    for (const m of (tpSplit(s.TP_modality).length ? tpSplit(s.TP_modality) : ['—'])) {
+      for (const q of (tpSplit(s.TP_schedule).length ? tpSplit(s.TP_schedule) : ['—'])) {
+        triples.add([String(s.TP_structure || '—').trim(), m, q].join('||'));
+      }
+    }
+  }
+  const possible = AX[0][1].length * AX[1][1].length * AX[2][1].length;
+  html += `<p class="prose" style="color:var(--text-muted);margin-top:1rem;">
+    Across ${N} studies, <strong>${triples.size}</strong> distinct structure &times; modality &times; schedule
+    combinations occur, out of ${possible} the three axes allow. The space is sparse: designs cluster on a
+    few combinations rather than spreading across it.</p>`;
+  el.innerHTML = html;
+}
+
 function renderTasksHeatmap() {
   if (!TASKS_DATA) {
     try { TASKS_DATA = decodeB64Json(TASKS_B64); }
@@ -4863,7 +4958,7 @@ function switchMapsTab(name) {
   });
   // Trigger resize-sensitive renders
   if (name === 'network') setTimeout(() => { initNetwork(); netRender(); renderAtlas(); }, 50);
-  if (name === 'tasks') setTimeout(() => renderTasksHeatmap(), 50);
+  if (name === 'tasks') setTimeout(() => { try { renderTaskDesignSpace(); } catch (e) { console.error('design space:', e); } renderTasksHeatmap(); }, 50);
   if (name === 'models') setTimeout(() => { renderModelsPane(); initSandbox(); try { renderModelComparisonStats(); } catch (e) {} try { renderDomainModelHeatmap(); } catch (e) {} }, 50);
   if (name === 'network') setTimeout(() => { try { renderSelfOther(); } catch (e) {} }, 60);
   if (name === 'frontier') setTimeout(() => renderFrontier(), 50);
@@ -7266,7 +7361,9 @@ const ATLAS_DIMS = [
   { key: 'domain',  list: 'v4_topic_broad',  label: 'Topic (broad)', color: '#A8553A' },
   { key: 'narrow',  list: 'v4_topic_narrow', label: 'Topic (narrow)', color: '#2E6E7E' },
   { key: 'pop',     single: 'population_category', label: 'Population', color: '#B07A2A' },
-  { key: 'mod',     single: 'TP_modality',   label: 'Task modality', color: '#7F77DD' },
+  { key: 'mod',     list: 'TP_modality',     label: 'Task modality', color: '#7F77DD' },
+  { key: 'tstruct', single: 'TP_structure',   label: 'Task structure', color: '#6B8F71' },
+  { key: 'tsched',  list: 'TP_schedule',      label: 'Reinforcement schedule', color: '#B07A2A' },
   { key: 'model',   single: 'model_family',  label: 'Model family', color: '#3A7E8A' },
   // How the learner receives information. Multi-coded and covering all 508 studies, and the
   // reason observation looks scarce elsewhere: it is the channel in 235 studies but the TOPIC
@@ -7278,7 +7375,7 @@ const ATLAS_DIMS = [
   { key: 'region',  prefix: null,            label: 'Brain region', color: '#C9573F' },
   { key: 'keywords',prefix: null,            label: 'Keywords', color: '#5A8F3C' },
 ];
-let ATLAS_STATE = { focus: null, dims: new Set(['topic', 'narrow', 'pop', 'mod', 'model', 'domain', 'channel', 'region', 'keywords']) };
+let ATLAS_STATE = { focus: null, dims: new Set(['topic', 'narrow', 'pop', 'mod', 'tstruct', 'tsched', 'model', 'domain', 'channel', 'region', 'keywords']) };
 let ATLAS_TAGSETS = null;
 
 // study_id -> [canonical brain region names], built from BRAIN_REGIONS (25 named
