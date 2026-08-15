@@ -8261,7 +8261,7 @@ try {
   // The published blob encodes every binary indicator as the STRING '0'/'1' (it comes from a
   // CSV), but ~46 call sites test `s[col] === 1` with a number. Strict equality made all of
   // them false, so every topic, domain, population, modality, goal and task-feature filter
-  // matched nothing and the visualisations binned every study as "Other". Coerce once here
+  // matched nothing and the visualizations binned every study as "Other". Coerce once here
   // rather than loosening 46 comparisons. Display is unaffected: String(1) === '1'.
   let __coerced = 0;
   for (const s of STUDIES) {
