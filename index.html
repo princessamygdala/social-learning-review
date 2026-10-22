@@ -484,52 +484,29 @@ footer { padding: 2rem; text-align: center; color: var(--text-muted); font-size:
 }
 
 /* the home page is the hero alone now, so nothing should pad the space it used to fill */
-#page-home, #page-home2 { padding-bottom: 0 !important; }
-#page-home .hero, #page-home .hero-net, #page-home2 .hero-flow { margin-bottom: 0; }
+#page-home { padding-bottom: 0 !important; }
+#page-home .hero, #page-home .hero-net { margin-bottom: 0; }
 
-/* ---- home 2: the flow as the hero, faint at rest, full strength when opened ---- */
-.hero-flow{position:relative;overflow:hidden;background:var(--cream);border-bottom:1px solid var(--border);padding:0}
-.hero-flow .viz{position:absolute;inset:0;z-index:0}
-.hero-flow .viz svg{display:block;width:100%;height:470px;transition:height .45s ease,opacity .55s ease;opacity:.22}
-.hero-flow.reading .viz svg{opacity:1;height:560px}
-.hero-flow.waking .viz svg{opacity:.5}
-.hero-flow .scrim{position:absolute;inset:0;z-index:1;pointer-events:none;transition:opacity .45s ease;
-  background:linear-gradient(90deg,var(--cream) 26%,rgba(250,247,242,.9) 44%,rgba(250,247,242,.35) 66%,rgba(250,247,242,0) 84%)}
-.hero-flow.reading .scrim{opacity:0}
-.hero-flow .inner{position:relative;z-index:2;max-width:1180px;margin:0 auto;padding:2.6rem 1.4rem 1.2rem;pointer-events:none;transition:opacity .45s ease}
-.hero-flow .inner a{pointer-events:auto}
-.hero-flow h1{max-width:17ch;line-height:1.14;margin-bottom:.55rem}
-.hero-flow .hero-sub{font-size:1.05rem;color:var(--text-muted);max-width:40ch;margin-bottom:1.2rem}
-.hero-flow .cta-row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
-.hero-flow .hero-plain{color:var(--deep-green);text-decoration:none;font-size:.95rem;padding:.3rem .2rem}
-.hero-flow .hero-numline{position:relative;z-index:2;max-width:1180px;margin:0 auto;padding:0 1.4rem 1.1rem;font-size:.8rem;color:var(--text-muted);transition:opacity .45s ease}
-.hero-flow .hero-numline b{color:var(--text);font-weight:600}
-.hero-flow.reading .inner,.hero-flow.reading .hero-numline{opacity:0}
-.hero-flow .hero-hint{position:absolute;right:1.2rem;bottom:.8rem;z-index:3;font-size:.76rem;color:var(--text-muted);
-  background:rgba(250,247,242,.85);padding:.2rem .55rem;border-radius:var(--radius)}
-@media(max-width:760px){.hero-flow .scrim{background:linear-gradient(180deg,rgba(250,247,242,.94) 58%,rgba(250,247,242,.4))}}
-
-/* ---- the two home pages fill the window instead of sitting in the 1100px column ---- */
-#page-home, #page-home2 { max-width: none; padding: 0 !important; }
-#page-home .hero-net, #page-home2 .hero-flow {
+/* ---- the home page fills the window instead of sitting in the 1100px column ---- */
+#page-home { max-width: none; padding: 0 !important; }
+#page-home .hero-net {
   min-height: calc(100vh - 66px); display: flex; flex-direction: column; justify-content: center;
 }
 /* flush left against the window, not centred in a column */
-#page-home .hero-net .inner, #page-home2 .hero-flow .inner {
+#page-home .hero-net .inner {
   max-width: 44rem; margin: 0; padding: 2.4rem 2rem 1.2rem clamp(1.5rem, 4vw, 3.5rem);
 }
-#page-home .hero-net .hero-numline, #page-home2 .hero-flow .hero-numline {
+#page-home .hero-net .hero-numline {
   max-width: none; margin: 0; padding: 0 2rem 2rem clamp(1.5rem, 4vw, 3.5rem);
 }
-#page-home .hero-net h1, #page-home2 .hero-flow h1 { font-size: clamp(2rem, 3.4vw, 3rem); max-width: 20ch; }
-#page-home .hero-net .hero-sub, #page-home2 .hero-flow .hero-sub { font-size: 1.12rem; max-width: 46ch; }
-#page-home2 .hero-flow .viz svg { height: 100% !important; }
-#page-home .hero-net .hero-net-scrim, #page-home2 .hero-flow .scrim {
+#page-home .hero-net h1 { font-size: clamp(2rem, 3.4vw, 3rem); max-width: 20ch; }
+#page-home .hero-net .hero-sub { font-size: 1.12rem; max-width: 46ch; }
+#page-home .hero-net .hero-net-scrim {
   background: linear-gradient(90deg, var(--cream) 30%, rgba(250,247,242,0.88) 50%, rgba(250,247,242,0.25) 72%, rgba(250,247,242,0) 88%);
 }
 @media (max-width: 860px) {
-  #page-home .hero-net, #page-home2 .hero-flow { min-height: auto; }
-  #page-home .hero-net .hero-net-scrim, #page-home2 .hero-flow .scrim {
+  #page-home .hero-net { min-height: auto; }
+  #page-home .hero-net .hero-net-scrim {
     background: linear-gradient(180deg, rgba(250,247,242,0.94) 58%, rgba(250,247,242,0.45));
   }
 }
@@ -644,8 +621,7 @@ footer { padding: 2rem; text-align: center; color: var(--text-muted); font-size:
 <body>
 
 <nav class="topnav">
-  <a href="#" data-page="home" class="brand" style="color:white;border-bottom:none;">⌂ Home 1</a>
-<a href="#" data-page="home2">Home 2</a>
+  <a href="#" data-page="home" class="brand" style="color:white;border-bottom:none;">⌂ Home</a>
   <a href="#" data-page="framework">What is social learning?</a>
   <a href="#" data-page="papers">Papers</a>
   <span class="nav-dropdown" style="position: relative; display: inline-block;">
@@ -697,29 +673,6 @@ footer { padding: 2rem; text-align: center; color: var(--text-muted); font-size:
 </section>
 
 
-<!-- ================= HOME 2 (flow hero, click to open) ================= -->
-<section class="page" id="page-home2">
-<div class="hero hero-flow" id="home2-hero">
-  <div class="viz"><svg id="home2-flow"></svg></div>
-  <div class="scrim"></div>
-  <div class="inner">
-    <h1>Computational Models of Social Learning: <span style="color: var(--text-muted); font-weight: 400;">A Living Repository</span></h1>
-    <p class="prose hero-sub">Browse studies, visualize the study space, or submit your own research.</p>
-    <div class="cta-row">
-      <a class="btn btn-primary" href="#" data-page="papers">Start browsing</a>
-      <a class="btn btn-secondary" href="#" data-page="maps">Interactive visualizations</a>
-      <a class="hero-plain" href="#" data-page="submit">Submit your paper &rarr;</a>
-    </div>
-  </div>
-  <div class="hero-numline">
-    <b><span class="live-n-studies">699</span></b> studies &nbsp;&middot;&nbsp;
-    <b><span class="live-n-papers">459</span></b> papers &nbsp;&middot;&nbsp;
-    <b><span class="live-n-fmri">178</span></b> with neuroimaging &nbsp;&middot;&nbsp; updated 30 September 2026
-  </div>
-  <div class="hero-hint" id="home2-hint">click the figure to open it</div>
-  <div id="home2-tip" style="position:absolute;pointer-events:none;opacity:0;background:rgba(45,42,38,0.95);color:white;padding:0.4rem 0.6rem;border-radius:var(--radius);font-size:0.82rem;max-width:300px;transition:opacity 0.1s;z-index:4;"></div>
-</div>
-</section>
 <!-- ================= FRAMEWORK ================= -->
 <section class="page" id="page-framework">
 <h1>What is social learning?</h1>
@@ -2964,6 +2917,7 @@ const FILTER_STATE = {
 // Routing (single-page)
 // ==========================================================
 function showPage(name, push=true) {
+  if (name === 'home2') name = 'home';   // the second home page was retired 2026-10-22
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('page-' + name);
   if (target) target.classList.add('active');
@@ -2971,7 +2925,6 @@ function showPage(name, push=true) {
     a.classList.toggle('active', a.dataset.page === name);
   });
   window.scrollTo({top: 0, behavior: 'auto'});
-  if (name === 'home2') { wireHome2(); setTimeout(drawHome2Flow, 60); }
   if (name === 'framework') {
     try { renderFrameworkReadings(); } catch (e) {}
     setTimeout(() => {
@@ -4315,50 +4268,6 @@ const HF_COLUMNS = [
 // ---- home hero: topic network drawn from the live study data (chosen 2026-09-23) ----
 // Nodes are the 20 commonest mid-level topics, sized by how many studies carry them; links are their
 // co-occurrences. Built from STUDIES so it stays correct as the study space grows.
-
-// ---- home 2: the flow as the hero. Faint at rest, full strength when clicked open. ----
-var HOME2_GREEN = { link: '#9DBBA3', node: '#6B8F71', nodeNone: '#D3CEC4', label: '#2D2A26',
-                    colLabel: '#3A8A8C', highlight: '#C4923E' };
-var home2Drawn = false, home2Open = false;
-function drawHome2Flow() {
-  var svg = document.getElementById('home2-flow');
-  if (!svg || home2Drawn) return;
-  var keep = HF_COLORS; HF_COLORS = HOME2_GREEN;
-  try { renderHomeFlow('home2-flow', 'home2-tip'); } catch (e) { console.error('home2 flow:', e); HF_COLORS = keep; return; }
-  HF_COLORS = keep;
-  var w = Math.max(svg.clientWidth || 1180, 900);
-  svg.setAttribute('viewBox', '0 0 ' + w + ' 560');
-  svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-  home2Drawn = true;
-  // the opening: a few patterns light up in turn, the way the network nodes pulse
-  var hero = document.getElementById('home2-hero');
-  var blocks = [].slice.call(svg.querySelectorAll('rect')).filter(function (r) { return r.getBoundingClientRect().height > 8; });
-  if (!blocks.length) return;
-  var picks = [], step = Math.max(1, Math.floor(blocks.length / 5));
-  for (var i = 0; i < blocks.length && picks.length < 4; i += step) picks.push(blocks[i]);
-  var tip = document.getElementById('home2-tip');
-  if (tip) tip.style.display = 'none';
-  if (hero) hero.classList.add('waking');
-  var k = 0;
-  (function next() {
-    if (k >= picks.length) { if (tip) tip.style.display = ''; if (hero) hero.classList.remove('waking'); return; }
-    var n = picks[k++];
-    n.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
-    setTimeout(function () { n.dispatchEvent(new MouseEvent('mouseout', { bubbles: true })); setTimeout(next, 260); }, 1100);
-  })();
-}
-function wireHome2() {
-  var hero = document.getElementById('home2-hero');
-  if (!hero || hero.dataset.wired) return;
-  hero.dataset.wired = '1';
-  hero.addEventListener('click', function (e) {
-    if (e.target.closest('a')) return;
-    home2Open = !home2Open;
-    hero.classList.toggle('reading', home2Open);
-    var hint = document.getElementById('home2-hint');
-    if (hint) hint.textContent = home2Open ? 'click anywhere to close' : 'click the figure to open it';
-  });
-}
 
 function renderHeroNetwork() {
   const host = document.getElementById('home-net-viz');
