@@ -1667,15 +1667,13 @@ domain scheme (about 384 studies).
       <option value="paradigm_source">Paradigm × source type</option>
       <option value="paradigm_target">Paradigm × target type</option>
       <option value="sourcetarget_topic">Source → target × topic</option>
-      <option value="paradigm_players">Paradigm × n_players</option>
-      <option value="context_topic">Context × topic</option>
-      <option value="partner_topic">Partner × topic</option>
-      <option value="outcome_topic">Outcome × topic</option>
-      <option value="paradigm_domain">Paradigm × domain</option>
+      <option value="paradigm_players">Paradigm × number of others</option>
+      <option value="context_topic">Presence of others × topic</option>
+      <option value="partner_topic">Partner (real, scripted, algorithm) × topic</option>
       <option value="paradigm_subtopic">Paradigm × subtopic</option>
       <option value="paradigm_population">Paradigm × population</option>
-      <option value="paradigm_modality">Paradigm × modality</option>
-      <option value="paradigm_model">Paradigm × model</option>
+      <option value="paradigm_modality">Paradigm × information source</option>
+      <option value="paradigm_model">Paradigm × model family</option>
       <option value="paradigm_region">Paradigm × brain region</option>
       <option value="paradigm_keyword">Paradigm × keyword</option>
       </optgroup>
@@ -3913,7 +3911,6 @@ document.addEventListener('click', e => {
 }, true);
 
 function passesFilters(s) {
-  if (FILTER_STATE.idSet.size > 0 && !FILTER_STATE.idSet.has(s.study_id)) return false;
   if (FILTER_STATE.source.size > 0) {
     if (!s.source_types.some(t => FILTER_STATE.source.has(t))) return false;
   }
@@ -4516,7 +4513,7 @@ function renderReviews() {
 function updateFilterCounters() {}
 
 function renderStudies() {
-  const filtered = STUDIES.filter(passesFilters);
+  const filtered = STUDIES.filter(s => passesFilters(s) && (FILTER_STATE.idSet.size === 0 || FILTER_STATE.idSet.has(s.study_id)));
   // (study-count line now set after grouping below)
   // Show active-filters row if anything is active
   const anyActive = FILTER_STATE.source.size + FILTER_STATE.target.size +
@@ -5601,6 +5598,8 @@ function renderTaskDesignSpace() {
 
 
 // Live task heat-map views built from STUDIES (2026-09-17); same shape as the stored TASKS_DATA views
+const TASK_SRC_LABEL = { TD_src_experiential: 'experience', TD_src_observational: 'observation', TD_src_advice: 'advice',
+  TD_src_evaluative_feedback: 'evaluative feedback', TD_src_instructed: 'instruction', TD_src_conditioning: 'conditioning' };
 function liveTaskViews() {
   const TOP = { 'Mentalizing and social inference': 'Mentalizing', 'Advice, instruction and communicated information': 'Advice and instruction', 'Social exchange': 'Social exchange',
     'Affective, moral and prosocial learning': 'Affect and morality', 'Groups, identity and social structure': 'Groups and structure', 'Norms, conformity and collective influence': 'Norms and conformity',
@@ -5608,26 +5607,46 @@ function liveTaskViews() {
   const rowsDef = {
     family: ['Task family', s => s.NEW_task_family ? [s.NEW_task_family] : []],
     name: ['Task name', s => s.NEW_task_name ? [s.NEW_task_name] : []],
-    structure: ['Task structure', s => s.TP_structure ? [s.TP_structure] : []] };
+    structure: ['Task structure', s => s.TP_structure ? [s.TP_structure] : []],
+    paradigm: ['Paradigm', s => String(s.task_paradigm || '').trim() ? [String(s.task_paradigm).trim()] : []],
+    stpair: ['Source > target', s => (s.NEW_source_type && s.NEW_target_type) ? [s.NEW_source_type + ' > ' + s.NEW_target_type] : []],
+    presence: ['Presence of others', s => s.SET_presence ? [s.SET_presence.replace(/_/g, ' ')] : []],
+    partner: ['Partner', s => s.SET_partner_reality ? [s.SET_partner_reality] : []] };
   const colsDef = {
     topic: ['Topic', s => (s.v4_topic_broad_list || []).map(t => TOP[t] || t)],
     class: ['Learning algorithm', s => s.NEW_learning_algorithm_class ? [s.NEW_learning_algorithm_class] : []],
     region: ['Brain region (atlas)', s => s.NEW_regions_atlas_list || []],
     st: ['Source > target', s => (s.NEW_source_type && s.NEW_target_type) ? [s.NEW_source_type + ' > ' + s.NEW_target_type] : []],
-    pop: ['Population', s => s.NEW_population_class ? [s.NEW_population_class] : []] };
+    pop: ['Population', s => s.NEW_population_class ? [s.NEW_population_class] : []],
+    source: ['Source type', s => s.NEW_source_type ? [s.NEW_source_type] : []],
+    target: ['Target type', s => s.NEW_target_type ? [s.NEW_target_type] : []],
+    nothers: ['Number of others', s => s.SET_n_others ? [s.SET_n_others] : []],
+    subtopic: ['Subtopic', s => (s.v4_topic_mid_list || []).filter(Boolean)],
+    srcinfo: ['Information source', s => Object.entries(TASK_SRC_LABEL).filter(([k]) => String(s[k]) === '1').map(([, l]) => l)],
+    model: ['Model family', s => s.NEW_mf_family ? [MF_SHORT[s.NEW_mf_family] || s.NEW_mf_family] : []],
+    keyword: ['Keyword', s => (Array.isArray(s.keywords) ? s.keywords : String(s.keywords || '').split(/[;,]/)).map(k => String(k).trim().toLowerCase()).filter(Boolean)] };
+  // the older precomputed views were built in June from fields since retired; these keys now rebuild them live
+  const LEGACY = { paradigm_topic: ['paradigm', 'topic'], paradigm_source: ['paradigm', 'source'], paradigm_target: ['paradigm', 'target'],
+    sourcetarget_topic: ['stpair', 'topic'], paradigm_players: ['paradigm', 'nothers'], context_topic: ['presence', 'topic'],
+    partner_topic: ['partner', 'topic'], paradigm_subtopic: ['paradigm', 'subtopic'],
+    paradigm_population: ['paradigm', 'pop'], paradigm_modality: ['paradigm', 'srcinfo'], paradigm_model: ['paradigm', 'model'],
+    paradigm_region: ['paradigm', 'region'], paradigm_keyword: ['paradigm', 'keyword'] };
   const views = {};
-  Object.entries(rowsDef).forEach(([rk, [rlab, rfn]]) => Object.entries(colsDef).forEach(([ck, [clab, cfn]]) => {
+  const combos = [];
+  ['family', 'name', 'structure'].forEach(rk => ['topic', 'class', 'region', 'st', 'pop'].forEach(ck => combos.push(['live_' + rk + '_' + ck, rk, ck])));
+  Object.entries(LEGACY).forEach(([key, [rk, ck]]) => combos.push([key, rk, ck]));
+  combos.forEach(([vkey, rk, ck]) => { const [rlab, rfn] = rowsDef[rk], [clab, cfn] = colsDef[ck]; {
     const rc = new Map(), cc = new Map();
     STUDIES.forEach(s => { rfn(s).forEach(v => rc.set(v, (rc.get(v) || 0) + 1)); cfn(s).forEach(v => cc.set(v, (cc.get(v) || 0) + 1)); });
-    const rows = [...rc.entries()].sort((a, b) => b[1] - a[1]).slice(0, rk === 'name' ? 25 : 40).map(e => e[0]);
+    const rows = [...rc.entries()].sort((a, b) => b[1] - a[1]).slice(0, rk === 'name' || rk === 'paradigm' ? 25 : 40).map(e => e[0]);
     const cols = [...cc.entries()].sort((a, b) => b[1] - a[1]).slice(0, ck === 'st' ? 12 : 20).map(e => e[0]);
     const ri = new Map(rows.map((r, i) => [r, i])), ci = new Map(cols.map((c, i) => [c, i]));
     const matrix = rows.map(() => cols.map(() => ({ n: 0, ids: [] })));
     STUDIES.forEach(s => { const rs = rfn(s).filter(v => ri.has(v)), cs = cfn(s).filter(v => ci.has(v)); rs.forEach(r => cs.forEach(c => { const m = matrix[ri.get(r)][ci.get(c)]; m.n++; m.ids.push(s.study_id); })); });
     const rowIds = rows.map(r => STUDIES.filter(s => rfn(s).includes(r)).map(s => s.study_id));
-    views['live_' + rk + '_' + ck] = { rows, cols, row_totals: rows.map(r => rc.get(r)), row_ids: rowIds, col_totals: cols.map(c => cc.get(c)), matrix,
+    views[vkey] = { rows, cols, row_totals: rows.map(r => rc.get(r)), row_ids: rowIds, col_totals: cols.map(c => cc.get(c)), matrix,
       title: rlab + ' by ' + clab.toLowerCase() + ' (live, n = ' + STUDIES.length + ' studies)', row_label: rlab, col_label: clab };
-  }));
+  } });
   return views;
 }
 function renderTasksHeatmap() {
