@@ -485,6 +485,10 @@ footer { padding: 2rem; text-align: center; color: var(--text-muted); font-size:
 
 /* the home page is the hero alone now, so nothing should pad the space it used to fill */
 #page-home { padding-bottom: 0 !important; }
+/* any cell or dot that opens its studies in Papers */
+[data-cs] { cursor: pointer; }
+td[data-cs]:hover { outline: 2px solid var(--deep-green); outline-offset: -2px; }
+circle[data-cs]:hover, rect[data-cs]:hover { stroke: var(--deep-green); stroke-width: 2; }
 #page-home .hero, #page-home .hero-net { margin-bottom: 0; }
 
 /* ---- the home page fills the window instead of sitting in the 1100px column ---- */
@@ -2857,6 +2861,8 @@ const SEARCH_FIELDS = [
 ];
 const FILTER_STATE = {
   searchFields: new Set(SEARCH_FIELDS.map(f => f.key)), // all on by default = same as today's behavior
+  idSet: new Set(),          // exact study_ids sent from a figure click (openStudiesInPapers); idLabel names them
+  idLabel: '',
   source: new Set(),
   target: new Set(),
   model: new Set(),
@@ -3680,6 +3686,7 @@ function clearAllFilters() {
   FILTER_STATE.search = '';
   FILTER_STATE.cellSource = null;
   FILTER_STATE.cellTarget = null;
+  FILTER_STATE.idLabel = '';
   document.querySelectorAll('.pill.active:not(.maps-tab):not(.net-sub)').forEach(p => p.classList.remove('active'));
   const si = document.getElementById('search-input'); if (si) si.value = '';
   const ymin = document.getElementById('year-min'); if (ymin) ymin.value = '';
@@ -3879,7 +3886,34 @@ function countActiveFilters() {
   return n;
 }
 
+// one route from any figure to the Papers tab: the exact studies behind a cell, bar or dot, under a readable label
+function openStudiesInPapers(ids, label) {
+  ids = [...new Set((ids || []).filter(Boolean))];
+  if (!ids.length) return;
+  clearAllFilters();
+  ids.forEach(i => FILTER_STATE.idSet.add(i));
+  FILTER_STATE.idLabel = label || '';
+  renderStudies();
+  showPage('papers');
+}
+
+// figures register the studies behind each cell or dot here and carry data-cs="<index>"; one listener routes the click
+const CLICK_SETS = [];
+function csAttr(ids, label) {
+  ids = [...new Set((ids || []).filter(Boolean))];
+  if (!ids.length) return '';
+  CLICK_SETS.push({ ids, label });
+  return ` data-cs="${CLICK_SETS.length - 1}"`;
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest && e.target.closest('[data-cs]');
+  if (!t) return;
+  const c = CLICK_SETS[+t.dataset.cs];
+  if (c) { e.preventDefault(); e.stopPropagation(); openStudiesInPapers(c.ids, c.label); }
+}, true);
+
 function passesFilters(s) {
+  if (FILTER_STATE.idSet.size > 0 && !FILTER_STATE.idSet.has(s.study_id)) return false;
   if (FILTER_STATE.source.size > 0) {
     if (!s.source_types.some(t => FILTER_STATE.source.has(t))) return false;
   }
@@ -4403,7 +4437,7 @@ function renderHomeFlow(targetId, tipId) {
   const hl = svg.append('g');
   const gn = svg.append('g');
   const nodeSel = gn.selectAll('rect').data(cols.flat()).join('rect').attr('x', d => colX[d.col]).attr('y', d => d.y).attr('width', nodeW).attr('height', d => d.h)
-    .attr('fill', d => d.value === '__none' ? HF_COLORS.nodeNone : HF_COLORS.node).attr('rx', 2).style('cursor', d => HF_COLUMNS[d.col].filter && d.value !== '__none' ? 'pointer' : 'default');
+    .attr('fill', d => d.value === '__none' ? HF_COLORS.nodeNone : HF_COLORS.node).attr('rx', 2).style('cursor', d => d.value !== '__none' ? 'pointer' : 'default');
   gn.selectAll('text.hf-label').data(cols.flat()).join('text').attr('class', 'hf-label').attr('x', d => d.col === HF_COLUMNS.length - 1 ? colX[d.col] - 6 : colX[d.col] + nodeW + 6)
     .attr('y', d => d.y + d.h / 2).attr('dy', '0.35em').attr('text-anchor', d => d.col === HF_COLUMNS.length - 1 ? 'end' : 'start').attr('font-size', d => d.h >= 11 ? 11 : 0)
     .attr('fill', HF_COLORS.label).style('pointer-events', 'none').style('paint-order', 'stroke').attr('stroke', 'white').attr('stroke-width', 3).text(d => `${d.label} (${d.n})`);
@@ -4418,13 +4452,16 @@ function renderHomeFlow(targetId, tipId) {
     return set.size;
   }
   function clear() { hl.selectAll('*').remove(); linkSel.attr('opacity', 0.16); nodeSel.attr('opacity', 1); tip.style.opacity = 0; }
-  nodeSel.on('mouseover', (e, d) => { const n = highlight(d); tip.style.opacity = 1; tip.innerHTML = `<b>${escHtml(d.label)}</b><br>${n} stud${n === 1 ? 'y' : 'ies'}${HF_COLUMNS[d.col].filter && d.value !== '__none' ? '<br><span style="color:#e6d2a8;">click to open in Papers</span>' : ''}`;
+  nodeSel.on('mouseover', (e, d) => { const n = highlight(d); tip.style.opacity = 1; tip.innerHTML = `<b>${escHtml(d.label)}</b><br>${n} stud${n === 1 ? 'y' : 'ies'}${d.value !== '__none' ? '<br><span style="color:#e6d2a8;">click to open in Papers</span>' : ''}`;
       tip.style.left = (e.offsetX + 14) + 'px'; tip.style.top = (e.offsetY + 14) + 'px'; })
     .on('mousemove', e => { tip.style.left = (e.offsetX + 14) + 'px'; tip.style.top = (e.offsetY + 14) + 'px'; })
     .on('mouseout', clear)
-    .on('click', (e, d) => { const key = HF_COLUMNS[d.col].filter; if (!key || d.value === '__none') return;
-      clearAllFilters(); FILTER_STATE[key].add(d.value); renderStudies(); showPage('papers');
-      document.querySelectorAll('.pill').forEach(p => { if (p.textContent.replace(/\s*\(\d+\)$/, '') === d.value) p.classList.add('active'); }); });
+    .on('click', (e, d) => { if (d.value === '__none') return;
+      // every column opens its exact studies, including the ones with no Papers filter of their own (task structure)
+      const ids = []; perStudy.forEach((vals, si) => { if (vals[d.col].some(([v]) => v === d.value)) ids.push(STUDIES[si].study_id); });
+      openStudiesInPapers(ids, HF_COLUMNS[d.col].label + ': ' + d.label); });
+  linkSel.style('cursor', 'pointer').on('click', (e, l) => openStudiesInPapers(l.studies.map(si => STUDIES[si].study_id),
+    HF_COLUMNS[l.ci].label + ': ' + l.src.label + ' → ' + HF_COLUMNS[l.ci + 1].label + ': ' + l.dst.label));
 }
 
 
@@ -4490,12 +4527,17 @@ function renderStudies() {
     FILTER_STATE.tf_goal.size + FILTER_STATE.tf_relational.size + FILTER_STATE.tf_comp.size + FILTER_STATE.tf_framing.size + FILTER_STATE.tf_agent_type.size +
     FILTER_STATE.keywords.size > 0
     || FILTER_STATE.search || FILTER_STATE.yearMin !== null || FILTER_STATE.yearMax !== null
-    || FILTER_STATE.cellSource !== null;
+    || FILTER_STATE.cellSource !== null || FILTER_STATE.idSet.size > 0;
   document.getElementById('filter-row-active').style.display = anyActive ? 'flex' : 'none';
   const af = document.getElementById('active-filters');
   af.innerHTML = '';
   if (FILTER_STATE.cellSource !== null) {
     af.innerHTML += `<span class="pill active">cell: ${FILTER_STATE.cellSource}→${FILTER_STATE.cellTarget}</span> `;
+  }
+  if (FILTER_STATE.idSet.size > 0) {
+    af.innerHTML += `<span class="pill active" id="idset-chip" style="cursor:pointer;" title="Remove this selection">${escHtml(FILTER_STATE.idLabel || 'selected studies')} · ${FILTER_STATE.idSet.size} ✕</span> `;
+    const chip = document.getElementById('idset-chip');
+    if (chip) chip.addEventListener('click', () => { FILTER_STATE.idSet.clear(); FILTER_STATE.idLabel = ''; renderStudies(); });
   }
   // Update per-filter dropdown counters
   document.querySelectorAll('.filter-counter').forEach(el => {
@@ -5499,12 +5541,14 @@ function renderTaskDesignSpace() {
   const maxOf = rows => Math.max(1, ...rows.map(r => r[1]));
 
   let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.4rem;">';
-  for (const [label, rows, color] of AX) {
+  for (const [label, rows, color, field] of AX) {
+    const multi = field !== 'TP_structure';
+    const idsOf = v => subset.filter(s => multi ? tpSplit(s[field]).includes(v) : String(s[field] || '').trim() === v).map(s => s.study_id);
     html += `<div><div style="font-weight:600;color:var(--teal-dark);margin-bottom:0.4rem;">${label}
       <span style="font-weight:400;color:var(--text-muted);font-size:0.82rem;">${rows.length} values</span></div>`;
     const mx = maxOf(rows);
     for (const [v, n] of rows) {
-      html += `<div style="display:flex;align-items:center;gap:0.5rem;margin:0.16rem 0;font-size:0.84rem;">
+      html += `<div${csAttr(idsOf(v), label + ': ' + v)} style="display:flex;align-items:center;gap:0.5rem;margin:0.16rem 0;font-size:0.84rem;">
         <div style="flex:1;min-width:0;"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(v)}</div>
           <div style="height:5px;background:${color};opacity:0.8;border-radius:3px;width:${Math.round(100 * n / mx)}%;"></div></div>
         <div style="color:var(--text-muted);width:2.6rem;text-align:right;">${n}</div></div>`;
@@ -5516,10 +5560,10 @@ function renderTaskDesignSpace() {
   // structure x modality, the two axes that actually vary together
   const structs = AX[0][1].map(r => r[0]);
   const mods = AX[1][1].map(r => r[0]);
-  const cell = {};
+  const cell = {}, cellIds = {};
   for (const s of subset) {
     const st = String(s.TP_structure || '').trim();
-    for (const m of tpSplit(s.TP_modality)) cell[st + '||' + m] = (cell[st + '||' + m] || 0) + 1;
+    for (const m of tpSplit(s.TP_modality)) { cell[st + '||' + m] = (cell[st + '||' + m] || 0) + 1; (cellIds[st + '||' + m] = cellIds[st + '||' + m] || []).push(s.study_id); }
   }
   const cmax = Math.max(1, ...Object.values(cell));
   html += `<h3 style="margin-top:1.8rem;">Structure &times; modality</h3>
@@ -5531,7 +5575,7 @@ function renderTaskDesignSpace() {
     for (const m of mods) {
       const n = cell[st + '||' + m] || 0;
       const a = n ? (0.12 + 0.88 * n / cmax) : 0;
-      html += `<td title="${escHtml(st)} + ${escHtml(m)}: ${n}" style="width:22px;height:20px;text-align:center;
+      html += `<td${n ? csAttr(cellIds[st + '||' + m], st + ' × ' + m) : ''} title="${escHtml(st)} + ${escHtml(m)}: ${n}" style="width:22px;height:20px;text-align:center;
         border:1px solid var(--border);background:rgba(46,126,99,${a.toFixed(2)});color:${a > 0.55 ? 'white' : 'var(--text)'};">${n || ''}</td>`;
     }
     html += '</tr>';
@@ -5578,9 +5622,10 @@ function liveTaskViews() {
     const rows = [...rc.entries()].sort((a, b) => b[1] - a[1]).slice(0, rk === 'name' ? 25 : 40).map(e => e[0]);
     const cols = [...cc.entries()].sort((a, b) => b[1] - a[1]).slice(0, ck === 'st' ? 12 : 20).map(e => e[0]);
     const ri = new Map(rows.map((r, i) => [r, i])), ci = new Map(cols.map((c, i) => [c, i]));
-    const matrix = rows.map(() => cols.map(() => ({ n: 0 })));
-    STUDIES.forEach(s => { const rs = rfn(s).filter(v => ri.has(v)), cs = cfn(s).filter(v => ci.has(v)); rs.forEach(r => cs.forEach(c => { matrix[ri.get(r)][ci.get(c)].n++; })); });
-    views['live_' + rk + '_' + ck] = { rows, cols, row_totals: rows.map(r => rc.get(r)), col_totals: cols.map(c => cc.get(c)), matrix,
+    const matrix = rows.map(() => cols.map(() => ({ n: 0, ids: [] })));
+    STUDIES.forEach(s => { const rs = rfn(s).filter(v => ri.has(v)), cs = cfn(s).filter(v => ci.has(v)); rs.forEach(r => cs.forEach(c => { const m = matrix[ri.get(r)][ci.get(c)]; m.n++; m.ids.push(s.study_id); })); });
+    const rowIds = rows.map(r => STUDIES.filter(s => rfn(s).includes(r)).map(s => s.study_id));
+    views['live_' + rk + '_' + ck] = { rows, cols, row_totals: rows.map(r => rc.get(r)), row_ids: rowIds, col_totals: cols.map(c => cc.get(c)), matrix,
       title: rlab + ' by ' + clab.toLowerCase() + ' (live, n = ' + STUDIES.length + ' studies)', row_label: rlab, col_label: clab };
   }));
   return views;
@@ -5624,12 +5669,12 @@ function renderTasksHeatmap() {
       const b = Math.round(230 - t01 * (230 - 90));
       const fg = t01 > 0.55 ? '#fff' : '#1a3838';
       const display = v === 0 ? '·' : v;
-      html += `<td class="tasks-cell" data-row="${escHtml(rname)}" data-col="${escHtml(cname)}" data-n="${v}"
+      html += `<td class="tasks-cell"${v && c.ids ? csAttr(c.ids, rname + ' × ' + cname) : ''} data-row="${escHtml(rname)}" data-col="${escHtml(cname)}" data-n="${v}"
                    style="text-align: center; background: rgb(${r},${g},${b}); color: ${fg};
                           cursor: pointer; padding: 0.35rem 0.2rem; min-width: 48px;
                           border: 1px solid rgba(255,255,255,0.4); font-size: 0.84rem; font-weight: ${v >= 3 ? 600 : 400};">${display}</td>`;
     });
-    html += `<td style="padding: 0.4rem 0.5rem; text-align: right; color: var(--text-muted); font-size: 0.82rem;">${row_totals[i] || 0}</td>`;
+    html += `<td style="padding: 0.4rem 0.5rem; text-align: right; color: var(--text-muted); font-size: 0.82rem;"${view.row_ids ? csAttr(view.row_ids[i], rname) : ''}>${row_totals[i] || 0}</td>`;
     html += '</tr>';
   });
   html += '</table>';
@@ -5843,7 +5888,8 @@ function renderSelfOther() {
 
   // study list
   const rows = soFilter(all).sort((a, b) => (b.year||0) - (a.year||0) || a.citation_short.localeCompare(b.citation_short));
-  document.getElementById('so-count').textContent = `(${rows.length}${rows.length !== all.length ? ' of ' + all.length : ''})`;
+  document.getElementById('so-count').innerHTML = `(${rows.length}${rows.length !== all.length ? ' of ' + all.length : ''})`
+    + (rows.length ? ` <a href="#" style="font-size:0.85rem;"${csAttr(rows.map(s => s.study_id), 'Self and other: current selection')}>open in Papers &rarr;</a>` : '');
   const namedLabel = k => (SO_NAMED.find(n => n[0] === k) || [null, k])[1];
   document.getElementById('so-list').innerHTML = rows.map(s => {
     const task = (s.task_description || s.study_focus_short || s.study_focus || '').slice(0, 220);
@@ -6064,7 +6110,8 @@ function wkWireCards(box) {
 function wkList(title, studies) {
   const box = document.getElementById('wk-detail');
   box.innerHTML = '<h3 style="margin:0.4rem 0 0.2rem;">' + escHtml(title)
-    + ' <span style="font-weight:400;color:var(--text-muted);">' + studies.length + ' studies</span></h3>'
+    + ' <span style="font-weight:400;color:var(--text-muted);">' + studies.length + ' studies</span>'
+    + ' <a href="#" style="font-size:0.85rem;font-weight:400;"' + csAttr(studies.map(s => s.study_id), title) + '>open in Papers &rarr;</a></h3>'
     + '<div class="wk-cards">' + studies.map(wkCard).join('') + '</div>';
   wkWireCards(box);
 }
@@ -6424,21 +6471,22 @@ function renderDomainModelHeatmap() {
   ];
   const FAMS = ['RL', 'Bayesian', 'Utility', 'DDM', 'Connectionist', 'Other'];
   const M = DOMS.map(() => FAMS.map(() => 0));
+  const MI = DOMS.map(() => FAMS.map(() => []));
   STUDIES.forEach(s => {
     const ci = FAMS.indexOf(mcFamBucket(s.model_family || ''));
     if (ci < 0) return;
-    DOMS.forEach((d, ri) => { if (s[d[1]] === 1 || String(s[d[1]]) === '1') M[ri][ci]++; });
+    DOMS.forEach((d, ri) => { if (s[d[1]] === 1 || String(s[d[1]]) === '1') { M[ri][ci]++; MI[ri][ci].push(s.study_id); } });
   });
   let html = '<table class="heatmap-table"><tr><th class="corner" style="text-align:left;">Domain \\ family</th>' +
     FAMS.map(f => `<th>${f}</th>`).join('') + '</tr>';
   M.forEach((row, ri) => {
     const rowMax = Math.max(1, ...row);
     html += `<tr><th style="text-align:left;font-weight:600;">${DOMS[ri][0]}</th>`;
-    row.forEach(v => {
+    row.forEach((v, ci) => {
       if (v === 0) { html += '<td class="heatmap-cell empty">0</td>'; return; }
       const t = v / rowMax;
       const r = Math.round(228 - t * (228 - 42)), g = Math.round(242 - t * (242 - 110)), b = Math.round(242 - t * (242 - 112));
-      html += `<td class="heatmap-cell" style="background:rgb(${r},${g},${b});color:${t > 0.55 ? '#ffffff' : '#1a3838'};">${v}</td>`;
+      html += `<td class="heatmap-cell"${csAttr(MI[ri][ci], DOMS[ri][0] + ' · ' + FAMS[ci])} style="background:rgb(${r},${g},${b});color:${t > 0.55 ? '#ffffff' : '#1a3838'};">${v}</td>`;
     });
     html += '</tr>';
   });
@@ -8193,11 +8241,12 @@ function renderMfHeatmap() {
   const rc = {}; all.forEach(s => rowsOf(s).forEach(r => { rc[r] = (rc[r] || 0) + 1; }));
   let rows = Object.entries(rc).sort((a, b) => b[1] - a[1]).map(e => e[0]);
   if (mode === 'mid') rows = rows.slice(0, 25);
-  const M = rows.map(r => fams.map(f => all.filter(s => s.NEW_mf_family === f && rowsOf(s).includes(r)).length));
+  const MI = rows.map(r => fams.map(f => all.filter(s => s.NEW_mf_family === f && rowsOf(s).includes(r)).map(s => s.study_id)));
+  const M = MI.map(row => row.map(x => x.length));
   const mx = Math.max(1, ...M.flat());
-  const cell = v => { const a = v ? 0.12 + 0.88 * v / mx : 0; return `<td style="text-align:center;padding:0.3rem 0.4rem;background:rgba(42,120,214,${a.toFixed(2)});color:${a > 0.6 ? 'white' : 'inherit'};font-size:0.8rem;">${v || ''}</td>`; };
+  const cell = (v, i, j) => { const a = v ? 0.12 + 0.88 * v / mx : 0; return `<td${v ? csAttr(MI[i][j], (MF_SHORT[fams[j]] || fams[j]) + ' · ' + rows[i]) : ''} style="text-align:center;padding:0.3rem 0.4rem;background:rgba(42,120,214,${a.toFixed(2)});color:${a > 0.6 ? 'white' : 'inherit'};font-size:0.8rem;">${v || ''}</td>`; };
   el.innerHTML = `<table class="subtable" style="margin:0;border-collapse:collapse;"><thead><tr><th style="text-align:left;"></th>${fams.map(f => `<th style="font-size:0.72rem;font-weight:600;padding:0.3rem 0.35rem;max-width:90px;white-space:normal;">${escHtml(MF_SHORT[f] || f)}</th>`).join('')}<th style="font-size:0.72rem;">n</th></tr></thead><tbody>` +
-    rows.map((r, i) => `<tr><td style="font-size:0.8rem;white-space:nowrap;padding:0.25rem 0.5rem 0.25rem 0;">${escHtml(r)}</td>${M[i].map(cell).join('')}<td style="font-size:0.78rem;color:var(--text-muted);text-align:center;">${rc[r]}</td></tr>`).join('') + '</tbody></table>';
+    rows.map((r, i) => `<tr><td style="font-size:0.8rem;white-space:nowrap;padding:0.25rem 0.5rem 0.25rem 0;">${escHtml(r)}</td>${M[i].map((v, j) => cell(v, i, j)).join('')}<td style="font-size:0.78rem;color:var(--text-muted);text-align:center;"${csAttr(all.filter(s => rowsOf(s).includes(r)).map(s => s.study_id), r)}>${rc[r]}</td></tr>`).join('') + '</tbody></table>';
   const sel = document.getElementById('mf-heat-rows');
   if (sel && !sel._init) { sel.addEventListener('change', renderMfHeatmap); sel._init = true; }
 }
@@ -8307,14 +8356,17 @@ function renderDesignPanel() {
   const design = cnt(withD, s => s.NEW_design);
   const role = cnt(withD.filter(s => s.NEW_modeling_role && s.NEW_modeling_role !== 'none'), s => s.NEW_modeling_role);
   const nInt = withD.filter(s => s.NEW_intervention === 'yes').length;
-  const chip = (label, n, color) => `<span style="display:inline-block;background:${color};color:white;border-radius:10px;padding:0.1rem 0.6rem;margin:0.15rem 0.3rem 0.15rem 0;font-size:0.85rem;">${label}: <strong>${n}</strong></span>`;
+  // counts are per paper; a click opens every study of those papers
+  const idsOfPapers = pred => { const pids = new Set(withD.filter(pred).map(s => s.paper_id)); return STUDIES.filter(s => pids.has(s.paper_id)).map(s => s.study_id); };
+  const chipPred = { experiment: s => s.NEW_design === 'experiment', observational: s => s.NEW_design === 'observational', mixed: s => s.NEW_design === 'mixed', intervention: s => s.NEW_intervention === 'yes' };
+  const chip = (label, n, color) => `<span${n ? csAttr(idsOfPapers(chipPred[label]), 'Design: ' + label) : ''} style="display:inline-block;background:${color};color:white;border-radius:10px;padding:0.1rem 0.6rem;margin:0.15rem 0.3rem 0.15rem 0;font-size:0.85rem;">${label}: <strong>${n}</strong></span>`;
   let html = `<div style="margin:0.4rem 0;">
     ${chip('experiment', design.experiment || 0, '#2E7E63')}${chip('observational', design.observational || 0, '#8a8a8a')}${chip('mixed', design.mixed || 0, '#B07A2A')}${chip('intervention', nInt, '#C0504D')}
   </div>
   <div style="font-size:0.9rem;font-weight:600;margin-top:0.6rem;">Role of the computational model (${withD.length} papers coded):</div>
   <table class="subtable"><thead><tr><th>Role</th><th style="text-align:right">papers</th><th>meaning</th></tr></thead><tbody>` +
     ['target', 'mediator_correlate', 'outcome_biomarker', 'characterization'].map(r =>
-      `<tr><td>${r.replace(/_/g, ' / ')}</td><td style="text-align:right">${role[r] || 0}</td><td style="color:var(--text-muted);font-size:0.85rem;">${MODELING_ROLE_DESC[r]}</td></tr>`).join('') +
+      `<tr><td>${r.replace(/_/g, ' / ')}</td><td style="text-align:right"${role[r] ? csAttr(idsOfPapers(s => s.NEW_modeling_role === r), 'Role of the model: ' + r.replace(/_/g, ' / ')) : ''}>${role[r] || 0}</td><td style="color:var(--text-muted);font-size:0.85rem;">${MODELING_ROLE_DESC[r]}</td></tr>`).join('') +
     `</tbody></table>`;
   const ds = document.getElementById('design-summary');
   if (ds) ds.innerHTML = html;
@@ -8470,8 +8522,8 @@ function renderParamCats() {
   let rows = cats.map(c => {
     const sub = all.filter(d => d.category === c);
     const by = k => sub.filter(d => d.is_social === k).length;
-    const r = { c, n: sub.length };
-    TAGCOLS.forEach(([k]) => r[k] = by(k));
+    const r = { c, n: sub.length, ids: sub.map(d => d.study_id) };
+    TAGCOLS.forEach(([k]) => { r[k] = by(k); r['ids_' + k] = sub.filter(d => d.is_social === k).map(d => d.study_id); });
     return r;
   }).sort((a, b) => b.n - a.n);
   // only show social-tag columns that actually occur in this corpus
@@ -8480,8 +8532,8 @@ function renderParamCats() {
     showCols.map(([, lbl]) => `<th style="text-align:right">${lbl}</th>`).join('') + `</tr></thead><tbody>`;
   rows.forEach(r => {
     const desc = PARAM_CAT_DESC[r.c] || '';
-    table += `<tr><td><span title="${escHtml(desc)}" style="border-bottom:1px dotted var(--text-muted);cursor:help;">${escHtml(r.c)}</span></td><td style="text-align:right">${r.n}</td>` +
-      showCols.map(([k]) => `<td style="text-align:right">${r[k]}</td>`).join('') + `</tr>`;
+    table += `<tr><td><span title="${escHtml(desc)}" style="border-bottom:1px dotted var(--text-muted);cursor:help;">${escHtml(r.c)}</span></td><td style="text-align:right"${csAttr(r.ids, 'Parameter: ' + r.c)}>${r.n}</td>` +
+      showCols.map(([k]) => `<td style="text-align:right"${r[k] ? csAttr(r['ids_' + k], 'Parameter: ' + r.c + ' (' + k + ')') : ''}>${r[k]}</td>`).join('') + `</tr>`;
   });
   table += `</tbody></table>`;
   const totSocial = all.filter(d => d.is_social === 'social').length;
@@ -8527,7 +8579,7 @@ function renderParamCats() {
     const gd = data.filter(d => paramGroupVals(d, grpKey).includes(g));
     gd.forEach(d => {
       const c = SOCIAL_TAG_COLOR[d.is_social] || '#888';
-      svg += `<circle cx="${x(d.value).toFixed(1)}" cy="${y}" r="4" fill="${c}" fill-opacity="0.6"><title>${escHtml(d.cit)}: ${escHtml(d.name)} = ${d.value}${d.condition ? ' (' + escHtml(d.condition) + ')' : ''} · ${escHtml(d.statistic)} · ${escHtml(d.is_social)} · ${escHtml(d.category)}</title></circle>`;
+      svg += `<circle style="cursor:pointer;" onclick="openPaperModal('${escHtml(d.paper_id || String(d.study_id || '').replace(/_s\d+$/, ''))}')" cx="${x(d.value).toFixed(1)}" cy="${y}" r="4" fill="${c}" fill-opacity="0.6"><title>${escHtml(d.cit)}: ${escHtml(d.name)} = ${d.value}${d.condition ? ' (' + escHtml(d.condition) + ')' : ''} · ${escHtml(d.statistic)} · ${escHtml(d.is_social)} · ${escHtml(d.category)}</title></circle>`;
     });
     if (gd.length >= 3) { const gv = gd.map(d => d.value).sort((a, b) => a - b); const med = gv[Math.floor(gv.length / 2)]; svg += `<line x1="${x(med).toFixed(1)}" y1="${y - 11}" x2="${x(med).toFixed(1)}" y2="${y + 11}" stroke="#0b0b0b" stroke-width="1.6"><title>median ${med}</title></line>`; }
   });
@@ -8583,13 +8635,15 @@ function spsTopics(s) {
 }
 function spsHeatmap(title, rowsOf, note) {
   const studies = (typeof STUDIES !== 'undefined' && STUDIES) ? STUDIES : [];
-  const ct = new Map(); const tot = new Map();
+  const ct = new Map(); const tot = new Map(); const ids = new Map();
   studies.forEach(s => {
     const slot = s.NEW_social_param_slot; if (!slot || slot === 'unclassified') return;
     rowsOf(s).forEach(r => {
       if (!ct.has(r)) ct.set(r, new Map());
       ct.get(r).set(slot, (ct.get(r).get(slot) || 0) + 1);
+      const key = r + '\u0000' + slot; if (!ids.has(key)) ids.set(key, []); ids.get(key).push(s.study_id);
       tot.set(r, (tot.get(r) || 0) + 1);
+      if (!ids.has(r)) ids.set(r, []); ids.get(r).push(s.study_id);
     });
   });
   const rows = [...tot.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]);
@@ -8600,12 +8654,12 @@ function spsHeatmap(title, rowsOf, note) {
   html += `</tr></thead><tbody>`;
   rows.forEach(r => {
     const n = tot.get(r);
-    html += `<tr><td style="white-space:nowrap;">${escHtml(r)}</td><td style="text-align:right;">${n}</td>`;
+    html += `<tr><td style="white-space:nowrap;">${escHtml(r)}</td><td style="text-align:right;"${csAttr(ids.get(r), title + ': ' + r)}>${n}</td>`;
     SPS_ORDER.forEach(k => {
       const c = ct.get(r).get(k) || 0; const p = n ? c / n : 0;
       const bg = c ? `rgba(176,99,42,${(0.08 + 0.72 * Math.min(1, p / 0.5)).toFixed(2)})` : 'transparent';
       const fg = p > 0.3 ? 'white' : 'var(--text)';
-      html += `<td style="text-align:center;background:${bg};color:${fg};padding:0.25rem 0.3rem;" title="${c} of ${n} studies (${Math.round(100 * p)}%)">${c ? c + ' <span style="opacity:0.75;font-size:0.72rem;">' + Math.round(100 * p) + '%</span>' : ''}</td>`;
+      html += `<td${c ? csAttr(ids.get(r + '\u0000' + k), SPS_LABEL[k] + ' · ' + r) : ''} style="text-align:center;background:${bg};color:${fg};padding:0.25rem 0.3rem;" title="${c} of ${n} studies (${Math.round(100 * p)}%)">${c ? c + ' <span style="opacity:0.75;font-size:0.72rem;">' + Math.round(100 * p) + '%</span>' : ''}</td>`;
     });
     html += `</tr>`;
   });
@@ -8626,10 +8680,12 @@ function renderSocialParamSlot() {
     SPS_ORDER.forEach(o => { if (String(s['sps_' + o]) === '1') any.set(o, (any.get(o) || 0) + 1); });
   });
   const N = coded.length;
+  const slotIds = (k, pred) => coded.filter(s => pred(s, k)).map(s => s.study_id);
+  const isPrim = (s, k) => s.NEW_social_param_slot === k, isAny = (s, k) => String(s['sps_' + k]) === '1';
   let html = `<table class="subtable"><thead><tr><th>Model slot</th><th>What it means</th><th style="text-align:right">primary slot</th><th style="text-align:right">structural</th><th style="text-align:right">generic</th><th style="text-align:right">primary or secondary</th></tr></thead><tbody>`;
   SPS_ORDER.forEach(k => {
     const c = prim.get(k) || 0;
-    html += `<tr><td><strong>${escHtml(SPS_LABEL[k])}</strong></td><td style="color:var(--text-muted);font-size:0.86rem;">${escHtml(SPS_GLOSS[k])}</td><td style="text-align:right">${c} <span style="color:var(--text-muted);font-size:0.8rem;">(${N ? Math.round(100 * c / N) : 0}%)</span></td><td style="text-align:right">${struct.get(k) || 0}</td><td style="text-align:right">${gen.get(k) || 0}</td><td style="text-align:right;color:var(--deep-green);">${any.get(k) || 0}</td></tr>`;
+    html += `<tr><td><strong>${escHtml(SPS_LABEL[k])}</strong></td><td style="color:var(--text-muted);font-size:0.86rem;">${escHtml(SPS_GLOSS[k])}</td><td style="text-align:right"${csAttr(slotIds(k, isPrim), 'Social parameter slot: ' + SPS_LABEL[k] + ' (primary)')}>${c} <span style="color:var(--text-muted);font-size:0.8rem;">(${N ? Math.round(100 * c / N) : 0}%)</span></td><td style="text-align:right"${csAttr(slotIds(k, (s, q) => isPrim(s, q) && s.NEW_social_param_kind === 'structural'), 'Social parameter slot: ' + SPS_LABEL[k] + ', structural')}>${struct.get(k) || 0}</td><td style="text-align:right"${csAttr(slotIds(k, (s, q) => isPrim(s, q) && s.NEW_social_param_kind === 'generic_on_social'), 'Social parameter slot: ' + SPS_LABEL[k] + ', generic')}>${gen.get(k) || 0}</td><td style="text-align:right;color:var(--deep-green);"${csAttr(slotIds(k, isAny), 'Social parameter slot: ' + SPS_LABEL[k] + ' (primary or secondary)')}>${any.get(k) || 0}</td></tr>`;
   });
   html += `</tbody></table>`;
   html += `<p style="font-size:0.84rem;color:var(--text-muted);margin-top:0.5rem;">${N} coded studies. A study has one primary slot; the last column also counts it under any secondary slot it holds. "Structural" and "generic" split the primary slot by whether the term exists only because of the social element.</p>`;
@@ -8653,9 +8709,9 @@ function latentSignalCounts() {
     ['Surprise / KL divergence', s => txt(s, 'winning_model', 'contrast', 'key_regions', 'model_class').match(/surprise|kullback|kl divergence/), 'how far a belief had to move (Bayesian surprise)'],
   ];
   return defs.map(([name, fn, gloss]) => {
-    let n = 0, ns = 0;
-    studies.forEach(s => { if (fn(s)) { n++; if (social(s)) ns++; } });
-    return { name, n, ns, gloss };
+    let n = 0, ns = 0; const ids = [], idsS = [];
+    studies.forEach(s => { if (fn(s)) { n++; ids.push(s.study_id); if (social(s)) { ns++; idsS.push(s.study_id); } } });
+    return { name, n, ns, gloss, ids, idsS };
   }).sort((a, b) => b.n - a.n);
 }
 
@@ -8666,7 +8722,7 @@ function renderLatentSignals() {
   const fitted = loadParamData().filter(d => d.category === 'prediction error').length;
   let html = `<table class="subtable"><thead><tr><th>Latent signal</th><th>What it is</th><th style="text-align:right">studies modeling it</th><th style="text-align:right">in a social context</th></tr></thead><tbody>`;
   rows.forEach(r => {
-    html += `<tr><td><strong>${escHtml(r.name)}</strong></td><td style="color:var(--text-muted);font-size:0.86rem;">${escHtml(r.gloss)}</td><td style="text-align:right">${r.n}</td><td style="text-align:right;color:var(--deep-green);">${r.ns}</td></tr>`;
+    html += `<tr><td><strong>${escHtml(r.name)}</strong></td><td style="color:var(--text-muted);font-size:0.86rem;">${escHtml(r.gloss)}</td><td style="text-align:right"${csAttr(r.ids, 'Latent signal: ' + r.name)}>${r.n}</td><td style="text-align:right;color:var(--deep-green);"${csAttr(r.idsS, 'Latent signal: ' + r.name + ', social context')}>${r.ns}</td></tr>`;
   });
   html += `</tbody></table>`;
   html += `<p style="font-size:0.84rem;color:var(--text-muted);margin-top:0.5rem;">Compare the top row: a prediction error is modeled in <strong>${rows[0] ? rows[0].n : 0}</strong> studies (${rows[0] ? rows[0].ns : 0} social), yet appears as a <em>fitted</em> parameter in only <strong>${fitted}</strong> rows of the explorer above, because it is computed, not fitted. In model-based fMRI these signals are the parametric regressors correlated with brain activity (e.g. a social prediction error in ventral striatum), which is where the "social prediction error" in this literature actually lives.</p>`;
