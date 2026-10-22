@@ -1856,17 +1856,6 @@ reporting each region, colored by network (a study can report several regions).
 </p>
 <div id="region-network-chart" style="margin: 0.6rem 0 1.6rem;"></div>
 
-<h2 style="margin-top: 0;">How the study space fits together</h2>
-<p class="prose" style="color: var(--text-muted); margin-bottom: 0.5rem;">
-Each study is traced from its topic, through its task and the winning class of learning algorithm, to where the
-social variable enters the model and, for studies with peak coordinates, the regions with a reported peak. Hover a
-block to trace its studies across the columns, or click it to open them in the Papers tab. A study with several
-topics or regions is counted under each, so column totals exceed the study count.
-</p>
-<div id="maps-flow-wrap" style="background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0.6rem 0.8rem; position: relative; overflow-x: auto; margin-bottom: 2rem;">
-  <svg id="maps-flow" style="width: 100%; min-width: 900px; height: 560px; display: block;"></svg>
-  <div id="maps-flow-tip" style="position:absolute; pointer-events:none; opacity:0; background: rgba(45,42,38,0.95); color: white; padding: 0.4rem 0.6rem; border-radius: var(--radius); font-size: 0.82rem; max-width: 300px; transition: opacity 0.1s;"></div>
-</div>
 </div><!--/maps-pane-brain-->
 
 
@@ -2392,6 +2381,17 @@ the count of studies in that cell, and the matching papers.
   </div>
   <div id="so-list" class="so-list"></div>
 
+</div>
+<h2 style="margin-top: 2.4rem;">How the study space fits together</h2>
+<p class="prose" style="color: var(--text-muted); margin-bottom: 0.5rem;">
+Each study is traced from its topic, through its task and the winning class of learning algorithm, to where the
+social variable enters the model and, for studies with peak coordinates, the regions with a reported peak. Hover a
+block to trace its studies across the columns, or click it to open them in the Papers tab. A study with several
+topics or regions is counted under each, so column totals exceed the study count.
+</p>
+<div id="maps-flow-wrap" style="background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0.6rem 0.8rem; position: relative; overflow-x: auto; margin-bottom: 2rem;">
+  <svg id="maps-flow" style="width: 100%; min-width: 900px; height: 560px; display: block;"></svg>
+  <div id="maps-flow-tip" style="position:absolute; pointer-events:none; opacity:0; background: rgba(45,42,38,0.95); color: white; padding: 0.4rem 0.6rem; border-radius: var(--radius); font-size: 0.82rem; max-width: 300px; transition: opacity 0.1s;"></div>
 </div>
 </div><!--/maps-pane-atlas-->
 
@@ -6382,8 +6382,8 @@ function switchMapsTab(name, push = true) {
   if (push) pushViewState({page: 'maps', mtab: name});
   else VIEW_STATE.mtab = name;
   if (name === 'nulls') { try { renderNullFindings(); } catch (e) {} }
-    // the flow figure lives in the brain pane since 2026-09-24, so it is drawn when that tab opens
-    if (name === 'brain') { try { renderHomeFlow('maps-flow', 'maps-flow-tip'); } catch (e) { console.error('maps flow:', e); } }
+  // the flow figure sits at the foot of Study topic maps since 2026-10-22, so it is drawn when that tab opens
+  if (name === 'network') setTimeout(() => { try { renderHomeFlow('maps-flow', 'maps-flow-tip'); } catch (e) { console.error('maps flow:', e); } }, 80);
   document.querySelectorAll('.maps-pane').forEach(p => {
     // the Study-atlas pane now lives inside the Study-network tab
     const show = (p.id === 'maps-pane-' + name)
@@ -8094,6 +8094,7 @@ const MF_GROUPS = [
   ['Error-driven value updating', ['Rescorla-Wagner or delta rule', 'Q-learning or temporal-difference', 'actor-critic', 'experience-weighted attraction', 'successor representation', 'hybrid model-based and model-free', 'model-based planning (tree search, value iteration)']],
   ['Bayesian inference', ['Bayesian belief updating (generic)', 'hierarchical Gaussian filter', 'Kalman filter', 'hidden Markov or change-point model', 'Bayesian inverse planning or inverse RL', 'Gaussian process']],
   ['Evidence accumulation', ['drift diffusion or evidence accumulation']],
+  ['Memory, averaging and population models', ['weighted averaging or opinion pooling', 'cognitive architecture (ACT-R)', 'connectionist or network learning', 'threshold or heuristic rule', 'evolutionary or cultural transmission model']],
   ['No learning rule', ['utility or value function only (no learning rule)', 'regression or descriptive (no learning rule)']],
   ['Other', ['other']],
 ];
@@ -8101,7 +8102,35 @@ const MF_SHORT = {'Rescorla-Wagner or delta rule': 'Delta rule (Rescorla-Wagner)
   'hierarchical Gaussian filter': 'Hierarchical Gaussian filter', 'hidden Markov or change-point model': 'Hidden Markov / change-point', 'Bayesian inverse planning or inverse RL': 'Inverse planning / inverse RL',
   'experience-weighted attraction': 'Experience-weighted attraction', 'model-based planning (tree search, value iteration)': 'Model-based planning', 'hybrid model-based and model-free': 'Hybrid model-based / model-free',
   'drift diffusion or evidence accumulation': 'Drift diffusion', 'utility or value function only (no learning rule)': 'Utility only', 'regression or descriptive (no learning rule)': 'Descriptive / regression',
-  'successor representation': 'Successor representation', 'actor-critic': 'Actor-critic', 'Kalman filter': 'Kalman filter', 'Gaussian process': 'Gaussian process', 'other': 'Other'};
+  'successor representation': 'Successor representation', 'actor-critic': 'Actor-critic', 'Kalman filter': 'Kalman filter', 'Gaussian process': 'Gaussian process', 'other': 'Other',
+  'weighted averaging or opinion pooling': 'Weighted averaging / opinion pooling', 'cognitive architecture (ACT-R)': 'Cognitive architecture (ACT-R)',
+  'connectionist or network learning': 'Connectionist / network learning', 'threshold or heuristic rule': 'Threshold or heuristic rule',
+  'evolutionary or cultural transmission model': 'Evolutionary / cultural transmission'};
+// the textbook form of each family, shown on its card; the per-study equations below the cards are the papers' own
+const MF_FORMULA = {
+  'Rescorla-Wagner or delta rule': 'V ← V + α·(r − V)',
+  'Q-learning or temporal-difference': 'Q(s,a) ← Q(s,a) + α·[r + γ·max Q(s′,a′) − Q(s,a)]',
+  'actor-critic': 'δ = r + γ·V(s′) − V(s);  V ← V + α_c·δ;  policy ← policy + α_a·δ',
+  'experience-weighted attraction': 'A_j ← [φ·N·A_j + (δ + (1 − δ)·1[j chosen])·π_j] / N′,  N′ = ρ·N + 1',
+  'successor representation': 'V(s) = Σ M(s,s′)·R(s′);  M ← M + α·[1(s) + γ·M(s′) − M(s)]',
+  'hybrid model-based and model-free': 'Q = w·Q_MB + (1 − w)·Q_MF',
+  'model-based planning (tree search, value iteration)': 'Q(s,a) = R(s,a) + γ·Σ P(s′|s,a)·max Q(s′,a′)',
+  'Bayesian belief updating (generic)': 'P(θ | data) ∝ P(data | θ)·P(θ)',
+  'hierarchical Gaussian filter': 'Δμ_i ∝ (π̂_(i−1) / π_i)·δ_(i−1)   (precision-weighted PE, per level)',
+  'Kalman filter': 'μ ← μ + K·(r − μ),  K = σ² / (σ² + σ²_obs)',
+  'hidden Markov or change-point model': 'P(s_t | x_1:t) ∝ P(x_t | s_t)·Σ P(s_t | s_(t−1))·P(s_(t−1) | x_1:t−1)',
+  'Bayesian inverse planning or inverse RL': 'P(goal | actions) ∝ P(actions | goal)·P(goal),  P(a | goal) ∝ exp(β·Q_goal(a))',
+  'Gaussian process': 'f ~ GP(m(x), k(x,x′));  posterior mean at x* = k*ᵀ(K + σ²I)⁻¹y',
+  'drift diffusion or evidence accumulation': 'dx = v·dt + σ·dW;  respond when x reaches ±a',
+  'weighted averaging or opinion pooling': 'estimate = w·own + (1 − w)·others',
+  'cognitive architecture (ACT-R)': 'A_i = ln Σ_j t_j^(−d) + ε;  value = Σ P(retrieve i)·outcome_i',
+  'connectionist or network learning': 'Δw = η·(target − output)·input',
+  'threshold or heuristic rule': 'e.g. win-stay / lose-shift; copy if share choosing ≥ threshold',
+  'evolutionary or cultural transmission model': 'p′ = p·f_p / f̄   (strategy share grows with relative payoff)',
+  'utility or value function only (no learning rule)': 'U(a) = Σ p·v(outcome) (+ social terms); no trial-wise update',
+  'regression or descriptive (no learning rule)': 'y ~ β₀ + β·x; no learning rule',
+  'other': 'varies by study',
+};
 const MF_EXT = ['social bonus or social value term', 'other-regarding utility', 'separate learning rate for social information', 'integration weight between own and social information', 'mentalizing or recursion term', 'source reliability or credibility weight', 'prior over the other', 'hierarchical or structured representation', 'arbitration between systems', 'uncertainty or volatility adaptation', 'forgetting or decay', 'valence-specific learning rates', 'counterfactual or fictive update'];
 function mfExtList(s) {
   const out = [];
@@ -8127,6 +8156,7 @@ function renderMfHierarchy() {
       const sel = MF_SEL === f;
       html += `<div class="figure-wrap" style="text-align:left;padding:0.7rem 0.9rem;margin:0;cursor:pointer;border:${sel ? '2px solid var(--deep-green)' : '1px solid var(--border)'};" onclick="MF_SEL=MF_SEL==='${escHtml(f)}'?null:'${escHtml(f)}';renderMfHierarchy();renderMfStudies();">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.4rem;"><strong>${escHtml(MF_SHORT[f] || f)}</strong><span style="color:var(--text-muted);font-size:0.85rem;">${ss.length}</span></div>
+        ${MF_FORMULA[f] ? `<div style="font-family:monospace;font-size:0.8rem;color:var(--teal-dark);margin-top:0.35rem;white-space:normal;">${escHtml(MF_FORMULA[f])}</div>` : ''}
         <div style="font-size:0.82rem;color:var(--text-muted);margin-top:0.3rem;">${nEq} with a printed update rule${top ? '; most common extensions: ' + top : ''}</div>
       </div>`;
     });
