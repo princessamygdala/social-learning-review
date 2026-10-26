@@ -5410,7 +5410,8 @@ function netRender() {
   });
 
   // Render circles
-  const node = svg.append('g').selectAll('circle')
+  const nodeG = svg.append('g');
+  const node = nodeG.selectAll('circle')
     .data(nodes)
     .join('circle')
     .attr('class', 'node')
@@ -5484,6 +5485,16 @@ function netRender() {
     .alpha(0.9)
     .on('tick', () => {
       node.attr('cx', d => d.x).attr('cy', d => d.y);
+    })
+    .on('end', () => {
+      // large groups placed near an edge spilled out of the frame (up to 82 of 698 dots on 2026-10-26);
+      // once settled, shrink the drawing to fit, leaving room for the legend on the right of a wide frame
+      if (!nodes.length) return;
+      const pad = 12, padR = W > 700 ? 220 : pad;
+      const x0 = d3.min(nodes, d => d.x) - 5, x1 = d3.max(nodes, d => d.x) + 5, y0 = d3.min(nodes, d => d.y) - 5, y1 = d3.max(nodes, d => d.y) + 5;
+      const k = Math.min(1, (W - pad - padR) / Math.max(1, x1 - x0), (H - 2 * pad) / Math.max(1, y1 - y0));
+      const tx = (W + pad - padR) / 2 - k * (x0 + x1) / 2, ty = H / 2 - k * (y0 + y1) / 2;
+      nodeG.transition().duration(400).attr('transform', `translate(${tx},${ty}) scale(${k})`);
     });
 }
 
@@ -9394,7 +9405,8 @@ function renderAtlasGlobal() {
 
   const svg = d3.select(svgEl); svg.selectAll('*').remove();
   const g = svg.append('g');
-  svg.call(d3.zoom().scaleExtent([0.2, 4]).on('zoom', e => g.attr('transform', e.transform)));
+  const zoom = d3.zoom().scaleExtent([0.2, 4]).on('zoom', e => g.attr('transform', e.transform));
+  svg.call(zoom);
   const link = g.append('g').attr('stroke', '#cfcabf').attr('stroke-opacity', 0.5)
     .selectAll('line').data(links).join('line').attr('stroke-width', d => 0.4 + 0.3 * d.w);
   const tip = document.getElementById('atlas-global-tip');
@@ -9415,10 +9427,24 @@ function renderAtlasGlobal() {
     .force('link', d3.forceLink(links).id(d => d.id).distance(24).strength(0.35))
     .force('charge', d3.forceManyBody().strength(-22))
     .force('center', d3.forceCenter(W / 2, H / 2))
+    // forceCenter moves the whole layout as one block and does not hold disconnected clusters, which
+    // drifted out of the frame (240 of 698 nodes in view on 2026-10-26); this pulls each node inward
+    .force('x', d3.forceX(W / 2).strength(0.05))
+    .force('y', d3.forceY(H / 2).strength(0.07))
     .force('collide', d3.forceCollide(6))
     .on('tick', () => {
       link.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
       node.attr('cx', d => d.x).attr('cy', d => d.y);
+    })
+    .on('end', () => {
+      // fit every node into the frame once the layout settles; the zoom stays free afterwards
+      if (!nodes.length) return;
+      // the legend covers about 220 px on the right of a wide frame, so fit into the space left of it
+      const pad = 20, padR = W > 700 ? 230 : pad;
+      const x0 = d3.min(nodes, d => d.x), x1 = d3.max(nodes, d => d.x), y0 = d3.min(nodes, d => d.y), y1 = d3.max(nodes, d => d.y);
+      const k = Math.min(4, (W - pad - padR) / Math.max(1, x1 - x0), (H - 2 * pad) / Math.max(1, y1 - y0));
+      svg.transition().duration(500).call(zoom.transform,
+        d3.zoomIdentity.translate((W + pad - padR) / 2, H / 2).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2));
     });
   // legend (top 14 categories by frequency)
   const freq = {}; idx.forEach(i => { const k = atlasColorKey(i, cdim); freq[k] = (freq[k] || 0) + 1; });
